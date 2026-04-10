@@ -14,6 +14,10 @@ class PPORunnerCfg(RslRlOnPolicyRunnerCfg):
     max_iterations = 1500
     save_interval = 100
     experiment_name = "amazing_velocity"
+    obs_groups = {
+        "actor": ["stack_policy", "none_stack_policy"],
+        "critic": ["stack_critic", "none_stack_critic"],
+    }
     policy = RslRlPpoActorCriticCfg(
         init_noise_std=1.0,
         actor_obs_normalization=False,

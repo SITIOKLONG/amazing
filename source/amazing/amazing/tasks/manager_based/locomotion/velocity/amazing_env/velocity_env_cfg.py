@@ -26,6 +26,7 @@ from isaaclab.utils.noise import AdditiveUniformNoiseCfg as Unoise
 from isaaclab.utils.noise import GaussianNoiseCfg as Gnoise
 
 import amazing.tasks.manager_based.locomotion.velocity.amazing_env.mdp as mdp
+from amazing.assets.amazing import AmazingCfg
 
 from .sensors import LiftMaskCfg
 
@@ -80,14 +81,14 @@ class MySceneCfg(InteractiveSceneCfg):
         mesh_prim_paths=["/World/ground"],
     )
     left_wheel_height_scanner = RayCasterCfg(
-        prim_path="{ENV_REGEX_NS}/Robot/left_wheel_static_link",
+        prim_path="{ENV_REGEX_NS}/Robot/WL_1",
         offset=RayCasterCfg.OffsetCfg(pos=(0.0, 0.0, 20.0)),
         pattern_cfg=patterns.GridPatternCfg(resolution=0.05, size=[0.025, 0.025]), # (resolution=0.05, size=[0.025, 0.025])
         debug_vis=True,
         mesh_prim_paths=["/World/ground"],
     )
     right_wheel_height_scanner = RayCasterCfg(
-        prim_path="{ENV_REGEX_NS}/Robot/right_wheel_static_link",
+        prim_path="{ENV_REGEX_NS}/Robot/WR_1",
         offset=RayCasterCfg.OffsetCfg(pos=(0.0, 0.0, 20.0)),
         attach_yaw_only=True,
         pattern_cfg=patterns.GridPatternCfg(resolution=0.05, size=[0.025, 0.025]),
@@ -95,7 +96,7 @@ class MySceneCfg(InteractiveSceneCfg):
         mesh_prim_paths=["/World/ground"],
     )
     left_mask_sensor = LiftMaskCfg(
-        prim_path="{ENV_REGEX_NS}/Robot/left_wheel_static_link",
+        prim_path="{ENV_REGEX_NS}/Robot/WL_1",
         history_length=10,
         offset=RayCasterCfg.OffsetCfg(pos=(0.0, 0.0, 20.0)),
         attach_yaw_only=True,
@@ -105,7 +106,7 @@ class MySceneCfg(InteractiveSceneCfg):
         gradient_threshold = 0.03,
     )
     right_mask_sensor = LiftMaskCfg(
-        prim_path="{ENV_REGEX_NS}/Robot/right_wheel_static_link",
+        prim_path="{ENV_REGEX_NS}/Robot/WR_1",
         history_length=10,
         offset=RayCasterCfg.OffsetCfg(pos=(0.0, 0.0, 20.0)),
         attach_yaw_only=True,
@@ -161,7 +162,7 @@ class ActionsCfg:
 
     hip_joint_pos = mdp.JointPositionActionCfg(
         asset_name="robot",
-        joint_names=["left_hip_joint", "right_hip_joint", 
+        joint_names=["left_thigh", "right_thigh", 
                      ],
         scale=1.0,
         use_default_offset=False,
@@ -169,8 +170,8 @@ class ActionsCfg:
     )
     shoudler_leg_joint_pos = mdp.JointPositionActionCfg(
         asset_name="robot",
-        joint_names=["left_shoulder_joint", "right_shoulder_joint", 
-                     "left_leg_joint", "right_leg_joint"
+        joint_names=["left_abd", "right_abd", 
+                     "left_calf", "right_calf"
                      ],
         scale=1.0,
         use_default_offset=False,
@@ -178,7 +179,7 @@ class ActionsCfg:
     )
     wheel_vel = mdp.JointVelocityActionCfg(
         asset_name="robot",
-        joint_names=["left_wheel_joint", "right_wheel_joint"],
+        joint_names=["left_wheel", "right_wheel"],
         scale=40.0,
         use_default_offset=False,
         preserve_order=True
@@ -225,8 +226,6 @@ class ObservationsCfg:
     @configclass
     class NoneStackCriticCfg(ObsGroup):
         velocity_commands = ObsTerm(func=mdp.generated_scaled_commands, params={"command_name": "base_velocity", "scale": (1.0, 0.0, 0.25)})
-        roll_pitch_commands = ObsTerm(func=mdp.generated_commands, params={"command_name": "roll_pitch"})
-        event_commands = ObsTerm(func=mdp.generated_commands, params={"command_name": "event"})
 
         height_scan = ObsTerm(
             func=mdp.height_scan,
@@ -260,7 +259,7 @@ class ObservationsCfg:
         is_contact = ObsTerm(
             func=mdp.is_contact,
             params={
-                "sensor_cfg": SceneEntityCfg("contact_forces", body_names=[".*_wheel_link"]),
+                "sensor_cfg": SceneEntityCfg("contact_forces", body_names=["WL_1", "WR_1"]),
                 "threshold": 1.0,
             },
         )
@@ -283,14 +282,14 @@ class ObservationsCfg:
             func=mdp.joint_pos,
             noise=Unoise(n_min=-0.05, n_max=0.05),  # default: -0.05
             params={
-                "asset_cfg": SceneEntityCfg("robot", joint_names=[".*_hip_joint", ".*_shoulder_joint"]),
+                "asset_cfg": SceneEntityCfg("robot", joint_names=[".*_thigh", ".*_abd"]),
             },
         )
         joint_pos_leg = ObsTerm(
             func=mdp.joint_pos_leg_gear,
             noise=Unoise(n_min=-0.05, n_max=0.05),  # default: 0.05
             params={
-                "asset_cfg": SceneEntityCfg("robot", joint_names=[".*_leg_joint"]),
+                "asset_cfg": SceneEntityCfg("robot", joint_names=[".*_calf"]),
                 "gear_ratio": -1.5,
             },
         )
@@ -298,14 +297,14 @@ class ObservationsCfg:
             func=mdp.joint_vel,
             noise=Unoise(n_min=-1.5, n_max=1.5),
             params={
-                "asset_cfg": SceneEntityCfg("robot", joint_names=[".*_hip_joint", ".*_shoulder_joint"]),
+                "asset_cfg": SceneEntityCfg("robot", joint_names=[".*_thigh", ".*_abd"]),
             },            
             scale=0.15)  # default: -1.5  
         joint_vel_leg = ObsTerm(
             func=mdp.joint_vel_leg_gear,
             noise=Unoise(n_min=-1.5, n_max=1.5), # default: 1.5
             params={
-                "asset_cfg": SceneEntityCfg("robot", joint_names=[".*_leg_joint"]),
+                "asset_cfg": SceneEntityCfg("robot", joint_names=[".*_calf"]),
                 "gear_ratio": -1.5,
             },            
             scale=0.15)  # default: -1.5 
@@ -313,7 +312,7 @@ class ObservationsCfg:
             func=mdp.joint_vel,
             noise=Unoise(n_min=-1.5, n_max=1.5),
             params={
-                "asset_cfg": SceneEntityCfg("robot", joint_names=[".*_wheel_joint"]),
+                "asset_cfg": SceneEntityCfg("robot", joint_names=[".*_wheel"]),
             },            
             scale=0.15)  # default: -1.5  
         base_ang_vel = ObsTerm(func=mdp.base_ang_vel_link, noise=Unoise(n_min=-0.15, n_max=0.15), scale=0.25)  # default: -0.15
@@ -330,8 +329,6 @@ class ObservationsCfg:
     class NoneStackPolicyCfg(ObsGroup):
         """Observations for None-Stack policy group."""
         velocity_commands = ObsTerm(func=mdp.generated_scaled_commands, params={"command_name": "base_velocity", "scale": (1.0, 0.0, 0.25)})
-        roll_pitch_commands = ObsTerm(func=mdp.generated_commands, params={"command_name": "roll_pitch"})
-        event_commands = ObsTerm(func=mdp.generated_commands, params={"command_name": "event"})
         height_scan = ObsTerm(
             func=mdp.height_scan,
             params={"sensor_cfg": SceneEntityCfg("height_scanner"), 'offset': 0.0},
@@ -344,7 +341,7 @@ class ObservationsCfg:
         is_contact = ObsTerm(
             func=mdp.is_contact,
             params={
-                "sensor_cfg": SceneEntityCfg("contact_forces", body_names=[".*_wheel_link"]),
+                "sensor_cfg": SceneEntityCfg("contact_forces", body_names=["WL_1", "WR_1"]),
                 "threshold": 1.0,
             },
         )
@@ -491,7 +488,7 @@ class TerminationsCfg:
     time_out = DoneTerm(func=mdp.time_out, time_out=True)
     base_contact = DoneTerm(
         func=mdp.illegal_contact,
-        params={"sensor_cfg": SceneEntityCfg("contact_forces", body_names="base"), "threshold": 1.0},
+        params={"sensor_cfg": SceneEntityCfg("contact_forces", body_names="base_link"), "threshold": 1.0},
     )
     terrain_out_of_bounds = DoneTerm(
         func=mdp.terrain_out_of_bounds,
@@ -530,6 +527,7 @@ class LocomotionVelocityRoughEnvCfg(ManagerBasedRLEnvCfg):
 
     def __post_init__(self):
         """Post initialization."""
+        self.scene.robot = AmazingCfg.replace(prim_path="{ENV_REGEX_NS}/Robot")
         # general settings
         self.decimation = 4
         self.episode_length_s = 20.0
@@ -590,6 +588,7 @@ class LocomotionVelocityFlatEnvCfg(ManagerBasedRLEnvCfg):
 
     def __post_init__(self):
         """Post initialization."""
+        self.scene.robot = AmazingCfg.replace(prim_path="{ENV_REGEX_NS}/Robot")
         # general settings
         self.decimation = 4
         self.episode_length_s = 20.0

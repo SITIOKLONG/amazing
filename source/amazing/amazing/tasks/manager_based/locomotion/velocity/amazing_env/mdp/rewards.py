@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 from isaaclab.assets import Articulation, RigidObject
 from isaaclab.managers import SceneEntityCfg, ManagerTermBase, RewardTermCfg
 from isaaclab.sensors import ContactSensor, RayCaster
-from lab.flamingo.tasks.manager_based.locomotion.velocity.sensors import LiftMask
+from ..sensors import LiftMask
 from isaaclab.utils.math import euler_xyz_from_quat, quat_rotate_inverse, yaw_quat
 
 if TYPE_CHECKING:
@@ -728,7 +728,7 @@ def feet_slide(env, sensor_cfg: SceneEntityCfg, asset_cfg: SceneEntityCfg = Scen
     return reward
 
 
-class FlamingoAirTimeReward(ManagerTermBase):
+class AmazingAirTimeReward(ManagerTermBase):
     """Reward for longer feet air and contact time with stuck detection and reward for locomotion."""
 
     def __init__(self, cfg: RewardTermCfg, env: ManagerBasedRLEnv):
