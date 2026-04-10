@@ -1,0 +1,11 @@
+# Copyright (c) 2022-2026, The Isaac Lab Project Developers (https://github.com/isaac-sim/IsaacLab/blob/main/CONTRIBUTORS.md).
+# All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
+"""Velocity locomotion tasks package.
+
+Importing this package triggers environment registration via amazing_env.
+"""
+
+from . import amazing_env  # noqa: F401
