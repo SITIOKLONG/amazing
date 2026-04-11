@@ -200,9 +200,6 @@ class AmazingFlatEnvCfg(LocomotionVelocityFlatEnvCfg):
             "T1_1",
             "T2_1",
             "T3_1",
-            "T4_1",
-            "T5_1",
-            "T6_1",
             "SR_1",
             "SL_1",
         ]
@@ -268,9 +265,6 @@ class AmazingFlatEnvCfg_PLAY(AmazingFlatEnvCfg):
             "T1_1",
             "T2_1",
             "T3_1",
-            "T4_1",
-            "T5_1",
-            "T6_1",
             "SR_1",
             "SL_1",
         ]
