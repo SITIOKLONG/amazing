@@ -9,21 +9,132 @@ from typing import TYPE_CHECKING
 from isaaclab.assets import Articulation, RigidObject
 from isaaclab.managers import SceneEntityCfg, ManagerTermBase, RewardTermCfg
 from isaaclab.sensors import ContactSensor, RayCaster
-from amazing.amazing.tasks.manager_based.locomotion.velocity.amazing_env.sensors import LiftMask
+from amazing.amazing.tasks.manager_based.locomotion.velocity.sensors import LiftMask
 from isaaclab.utils.math import euler_xyz_from_quat, quat_rotate_inverse
 
 if TYPE_CHECKING:
     from isaaclab.envs import ManagerBasedRLEnv
 
+def track_lin_vel_xyz_link_event(
+    env: ManagerBasedRLEnv,
+    std: float,
+    command_name: str,
+    event_command_name: str,
+    lin_vel_z_target: float,
+    active_time_range: tuple[float, float] = (0.4, 0.8),
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot")
+) -> torch.Tensor:
+    """Reward tracking of linear velocity commands.
+    
+    - If event_cmd == 0: track XY velocity commands
+    - If event_cmd == 1: track Z velocity of 5.0 m/s
+    """
+    asset: RigidObject = env.scene[asset_cfg.name]
+    event_cmd = env.command_manager.get_command(event_command_name)  # shape: (num_envs, 2)
+
+    # --- Get actual velocity ---
+    lin_vel_b = asset.data.root_link_lin_vel_b  # shape: (num_envs, 3)
+
+    # --- Masks ---
+    event_active= event_cmd[:, 0] == 1.0
+
+    # --- Event active ---
+    time_elapsed = event_cmd[:, 1]
+    in_event_window = (time_elapsed >= active_time_range[0]) & (time_elapsed <= active_time_range[1])
+    use_event_target = event_active & in_event_window
+
+    # --- Default target: xy velocity tracking ---
+    cmd_vel = env.command_manager.get_command(command_name)  # shape: (num_envs, 3)
+    lin_vel_error_xy = torch.sum(torch.square(cmd_vel[:, :2] - lin_vel_b[:, :2]), dim=1)  # shape: (num_envs,)
+    reward_xy = torch.exp(-lin_vel_error_xy / std**2)
+
+    # --- Event mode: track z velocity to 5.0 m/s ---
+    lin_vel_error_z = torch.square(lin_vel_b[:, 2] - lin_vel_z_target)
+    reward_z = torch.exp(-lin_vel_error_z / std**2)
+
+    # --- Combine based on event flag ---
+    reward = torch.where(use_event_target, reward_z, reward_xy)
+
+    return reward
+
+def track_ang_vel_z_link_exp_event(
+    env: ManagerBasedRLEnv, std: float, command_name: str, event_command_name:str , asset_cfg: SceneEntityCfg = SceneEntityCfg("robot")
+) -> torch.Tensor:
+    """Reward tracking of angular velocity commands (yaw) using exponential kernel."""
+    # extract the used quantities (to enable type-hinting)
+    asset: RigidObject = env.scene[asset_cfg.name]
+    event_cmd = env.command_manager.get_command(event_command_name)  # shape: (num_envs, 2)
+
+    # compute the error
+    ang_vel_error = torch.square(
+        env.command_manager.get_command(command_name)[:, 2] - asset.data.root_link_ang_vel_b[:, 2]
+    )
+    return torch.exp(-ang_vel_error / std**2) * (event_cmd[:, 0]!=1.0) 
+
+def track_ang_vel_z_link_event(
+    env: ManagerBasedRLEnv,
+    std: float,
+    command_name: str,
+    event_command_name: str,
+    active_time_range: tuple[float, float] = (0.5, 1.0),
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+) -> torch.Tensor:
+    """Reward tracking of angular velocity commands (yaw) using exponential kernel.
+    
+    - If event_cmd == 0: track commanded yaw angular velocity (command_name[:, 2])
+    - If event_cmd == 1: maximize a yaw velocity (ang_vel_z)
+    """
+    asset: RigidObject = env.scene[asset_cfg.name]
+    event_cmd = env.command_manager.get_command(event_command_name)  # shape: (num_envs, 2)
+
+    # --- Get actual yaw angular velocity ---
+    ang_vel_b_z = asset.data.root_link_ang_vel_b[:, 2]  # shape: (num_envs,)
+
+    # --- Masks ---
+    event_active= event_cmd[:, 0] == 1.0
+
+    # --- Event active ---
+    time_elapsed = event_cmd[:, 1]
+    in_event_window = (time_elapsed >= active_time_range[0]) & (time_elapsed <= active_time_range[1])
+    use_event_target = event_active & in_event_window
+
+    # --- Default: track commanded yaw velocity (from command_name) ---
+    cmd_ang_vel_z = env.command_manager.get_command(command_name)[:, 2]
+    ang_vel_error_default = torch.square(cmd_ang_vel_z - ang_vel_b_z)
+    reward_default = torch.exp(-ang_vel_error_default / std**2)
+
+    # --- Event mode: maximize yaw velocity ---
+    reward_event = torch.abs(ang_vel_b_z)
+
+    # --- Combine based on event flag ---
+    reward = torch.where(use_event_target, reward_event, reward_default)
+
+    return reward
+
+def ang_vel_z_event(
+    env: ManagerBasedRLEnv,
+    event_command_name: str = "event",
+    event_time_range: tuple = (0.15, 0.8),
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+) -> torch.Tensor:
+    """Reward for yaw angular velocity using linear scaled abs value (clipped at 15 rad/s).
+
+    r = clamp(|ang_vel_z| / 4.0, max=15 / 4.0)
+    """
+    asset: RigidObject = env.scene[asset_cfg.name]
+
+    event_command = env.command_manager.get_command(event_command_name)
+    event_time = event_command[:, 1]
+    ang_vel_b_z = asset.data.root_link_ang_vel_b[:, 2]
+
+    reward = torch.clamp(torch.abs(ang_vel_b_z) / 3.0, max=5.0)
+
+    return reward * event_command[:, 0] * torch.logical_and(event_time >= event_time_range[0], event_time <= event_time_range[1])
 
 def lin_vel_z_event(
     env: ManagerBasedRLEnv,
     event_command_name: str = "event",
     event_time_range: tuple = (0.3, 0.8),
-    max_up_vel: float = 4.0,
-    up_vel_coef: float = 20.0,
-    down_vel_coef: float = 1.0,
-    temperature: float = 1.0,
     asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
 ) -> torch.Tensor:
 
@@ -40,48 +151,27 @@ def lin_vel_z_event(
 
     alignment_reward = torch.abs(alignment)
 
-    target_up_vel = max_up_vel
-    # up_vel = torch.clamp(lin_vel_z, min=0, max=max_up_vel)
-    # down_vel = torch.clamp(-lin_vel_z, min=-max_up_vel, max=max_up_vel)
+    max_up_vel = 6.0
+    up_vel = torch.clamp(lin_vel_z, min=0, max=max_up_vel)
+    down_vel = torch.clamp(-lin_vel_z, min=-max_up_vel, max=max_up_vel)
 
     pre_jump = (event_time < event_time_range[0]).float()
 
     descent_vel = torch.clamp(-lin_vel_z, min=0.0)
-    max_descent_vel = 1.0
+    max_descent_vel = 0.75
 
     penalty_coef = 1.0
     descent_penalty = torch.clamp(descent_vel - max_descent_vel, min=0.0) * penalty_coef
 
     jump_phase = torch.logical_and(event_time >= event_time_range[0], event_time <= event_time_range[1]).float()
 
-    after_jump = torch.logical_and(event_time > event_time_range[1], event_time <= event_time_range[1] + 0.4).float()
+    after_jump = torch.logical_and(event_time > event_time_range[1], event_time <= 1.2).float()
 
-    up_vel_reward   = torch.exp(-torch.abs((target_up_vel - lin_vel_z)/max_up_vel) * temperature)
-    down_vel_reward = torch.exp(-torch.abs((-target_up_vel - lin_vel_z)/max_up_vel) * temperature)
-
-    reward = up_vel_reward * up_vel_coef  * event_command[:, 0] * jump_phase  * alignment_reward
-    reward += down_vel_reward * down_vel_coef * event_command[:, 0] * after_jump * alignment_reward
-    reward -= descent_penalty * event_command[:, 0] * pre_jump
+    reward = up_vel * 0.8 * event_command[:, 0] * jump_phase * alignment_reward
+    reward += down_vel * 0.2 * event_command[:, 0] * after_jump * alignment_reward
+    reward -= descent_penalty * event_command[:, 0]  * pre_jump
 
     return reward
-
-def wheel_action_zero_event(
-    env: ManagerBasedRLEnv,
-    command_name: str = "base_velocity",
-    event_command_name: str = "event",
-    wheel_action_name: str = "wheel_vel",
-    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
-) -> torch.Tensor:
-    
-    cmd = env.command_manager.get_command(command_name)         # [B, D]
-    event_command = env.command_manager.get_command(event_command_name)  # [B, 2]
-    
-    wheel_action = env.action_manager.get_term(wheel_action_name).processed_actions
-    wheel_action_l2 = torch.sum(torch.square(wheel_action), dim=1)  # [B]
-
-    no_cmd_mask = torch.norm(cmd, dim=-1) < 1e-3
-
-    return wheel_action_l2 * no_cmd_mask * event_command[:, 0]
 
 def reward_push_ground_event(
     env: ManagerBasedRLEnv,
@@ -261,46 +351,6 @@ def base_height_adaptive_l2_event(
         adjusted_target_height = target_height
     # Compute the L2 squared penalty
     return torch.square(asset.data.root_link_pos_w[:, 2] - adjusted_target_height) * (1 - event_cmd[:,0])
-
-def base_target_height_adaptive_l2_event(
-    env: ManagerBasedRLEnv,
-    target_height: float,
-    event_command_name: str,
-    event_target_height: float = 0.56288,
-    active_time_range: tuple = (0.8, 1.2),
-    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
-    sensor_cfg: SceneEntityCfg | None = None,
-) -> torch.Tensor:
-    """
-    Penalize deviation from adaptive base height.
-    
-    - Default: penalize from `target_height`
-    - If event is active and time_elapsed is in [0.8, 1.2], penalize from `event_target_height`
-    """
-    asset: RigidObject = env.scene[asset_cfg.name]
-    event_cmd = env.command_manager.get_command(event_command_name)  # shape: (num_envs, 2)
-    event_active = event_cmd[:, 0] == 1.0
-    time_elapsed = event_cmd[:, 1]
-    in_event_window = (time_elapsed >= active_time_range[0]) & (time_elapsed <= active_time_range[1])
-    use_event_target = event_active & in_event_window
-
-    # Base height target selection
-    if sensor_cfg is not None:
-        sensor: RayCaster = env.scene[sensor_cfg.name]
-        terrain_adjustment = torch.mean(sensor.data.ray_hits_w[..., 2], dim=1)
-        default_target = target_height + terrain_adjustment
-        event_target = event_target_height + terrain_adjustment
-    else:
-        default_target = target_height
-        event_target = event_target_height
-
-    # Select final height target
-    final_target = torch.where(use_event_target, event_target, default_target)
-
-    # Compute L2 penalty on height deviation
-    current_height = asset.data.root_link_pos_w[:, 2]
-    return torch.square(current_height - final_target)
-
 
 def over_height(
     env: ManagerBasedRLEnv,

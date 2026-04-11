@@ -15,11 +15,11 @@ from amazing.amazing.tasks.manager_based.locomotion.position.amazing_env.rough_e
     CurriculumCfg,
 )
 
-from amazing.assets.amazing import AmazingCfg as FLAMINGO_CFG  # isort: skip
+from amazing.assets.amazing import AmazingCfg as Amazing_CFG  # isort: skip
 
 
 @configclass
-class FlamingoCurriculumCfg(CurriculumCfg):
+class AmazingCurriculumCfg(CurriculumCfg):
 
     # curriculum_dof_torques = CurrTerm(
     #     func=mdp.modify_reward_weight, params={"term_name": "dof_torques_l2", "weight": -2.5e-3, "num_steps": 50000}
@@ -35,7 +35,7 @@ class FlamingoCurriculumCfg(CurriculumCfg):
     # TODO : modify max_vel and command range !
 
 @configclass
-class FlamingoRewardsCfg():
+class AmazingRewardsCfg():
     
     """
     Track Reward Set
@@ -104,23 +104,23 @@ class FlamingoRewardsCfg():
     joint_deviation = RewTerm(
         func=mdp.joint_deviation_zero_l1,
         weight=-1.0,
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*_hip_joint"])},
+        params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*_calf"])},
     )
 
     dof_pos_limits_hip = RewTerm(
         func=mdp.joint_pos_limits,
         weight=-1.0,
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*_hip_joint")},
+        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*_calf")},
     )
     dof_pos_limits_shoulder = RewTerm(
         func=mdp.joint_pos_limits,
         weight=-1.0,
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*_shoulder_joint")},
+        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*thigh")},
     )
     dof_pos_limits_leg = RewTerm(
         func=mdp.joint_pos_limits,
         weight=-1.0,
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*_leg_joint")},
+        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*_wheel")},
     )
     undesired_contacts = RewTerm(
         func=mdp.undesired_contacts,
@@ -133,12 +133,12 @@ class FlamingoRewardsCfg():
     joint_applied_torque_limits = RewTerm(
         func=mdp.applied_torque_limits,
         weight=-0.025,  # default: -0.1
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*_joint")},
+        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*")},
     )
     shoulder_align_l1 = RewTerm(
         func=mdp.joint_align_l1,
         weight=-0.1,  # default: -0.5
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*_shoulder_joint")},
+        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*thigh")},
     )
     base_height = RewTerm(
         func=mdp.base_height_adaptive_l2,
@@ -151,23 +151,23 @@ class FlamingoRewardsCfg():
     )
     flat_orientation_l2 = RewTerm(func=mdp.flat_euler_angle_l2, weight=-5.0)
 
-    joint_torques_l2 = RewTerm(func=mdp.joint_torques_l2, weight=-5.0e-8, params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*_hip_joint", ".*_shoulder_joint", ".*_leg_joint"]),})
+    joint_torques_l2 = RewTerm(func=mdp.joint_torques_l2, weight=-5.0e-8, params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*_calf", ".*thigh", ".*_wheel"]),})
     wheel_torques_l2 = RewTerm(func=mdp.joint_torques_l2, weight=-5.0e-7, params={"asset_cfg" : SceneEntityCfg("robot", joint_names=[".*_wheel_joint"])})
     dof_acc_l2 = RewTerm(func=mdp.joint_acc_l2, weight=-2.5e-7)  # default: -2.5e-7
     action_rate_l2 = RewTerm(func=mdp.action_rate_l2, weight=-0.01)  # default: -0.01
 
     
 @configclass
-class FlamingoRoughEnvCfg(LocomotionPositionRoughEnvCfg):
+class AmazingRoughEnvCfg(LocomotionPositionRoughEnvCfg):
 
-    rewards: FlamingoRewardsCfg = FlamingoRewardsCfg()
-    # curriculum: FlamingoCurriculumCfg = FlamingoCurriculumCfg()
+    rewards: AmazingRewardsCfg = AmazingRewardsCfg()
+    # curriculum: AmazingCurriculumCfg = AmazingCurriculumCfg()
 
     def __post_init__(self):
         # post init of parent
         super().__post_init__()
         # scene
-        self.scene.robot = FLAMINGO_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
+        self.scene.robot = Amazing_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
 
         #! ****************** Observations setup ******************* !#
         # Using Lift_mask
@@ -217,7 +217,7 @@ class FlamingoRoughEnvCfg(LocomotionPositionRoughEnvCfg):
 
 
 @configclass
-class FlamingoRoughEnvCfg_PLAY(FlamingoRoughEnvCfg):
+class AmazingRoughEnvCfg_PLAY(AmazingRoughEnvCfg):
     def __post_init__(self):
         # post init of parent
         super().__post_init__()
@@ -270,7 +270,17 @@ class FlamingoRoughEnvCfg_PLAY(FlamingoRoughEnvCfg):
         # terminations
         self.terminations.base_contact.params["sensor_cfg"].body_names = [
             "base_link",
-            ".*_hip_link",
-            ".*_shoulder_link",
-            ".*_leg_link",
+            "T1_1",
+            "T2_1",
+            "T3_1",
+            "T4_1",
+            "T5_1",
+            "T6_1",
+            "SR_1",
+            "FR1_1",
+            "WR_1",
+            "SL_1",
+            "FL1_1",
+            "FL2_1",
+            "WL_1",
         ]

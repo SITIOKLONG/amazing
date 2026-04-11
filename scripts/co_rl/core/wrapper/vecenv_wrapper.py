@@ -158,8 +158,8 @@ class CoRlVecEnvWrapper(VecEnv):
             obs_dict = self.unwrapped.observation_manager.compute()
         else:
             obs_dict = self.unwrapped._get_observations()
-
         # Policy observations: 항상 state handler를 사용하여 "stack_policy"와 "none_stack_policy"를 합칩니다.
+
         if hasattr(self, "policy_state_handler"):
             if self.policy_state_handler.stack_buffer is None:
                 policy_obs = self.policy_state_handler.reset(obs_dict["stack_policy"], obs_dict["none_stack_policy"])

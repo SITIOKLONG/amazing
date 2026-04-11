@@ -1,11 +1,12 @@
-# Copyright (c) 2022-2026, The Isaac Lab Project Developers (https://github.com/isaac-sim/IsaacLab/blob/main/CONTRIBUTORS.md).
+# Copyright (c) 2022-2024, The ORBIT Project Developers.
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-"""Velocity locomotion tasks package.
+"""Locomotion environments with velocity-tracking commands.
 
-Importing this package triggers environment registration via amazing_env.
+These environments are based on the `legged_gym` environments provided by Rudin et al.
+
+Reference:
+    https://github.com/leggedrobotics/legged_gym
 """
-
-from . import amazing_env  # noqa: F401

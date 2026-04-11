@@ -8,9 +8,9 @@ from isaaclab.managers import SceneEntityCfg
 from isaaclab.utils import configclass
 
 from isaaclab.managers import CurriculumTermCfg as CurrTerm
-import amazing.amazing.tasks.manager_based.locomotion.velocity.amazing_env.mdp as mdp
-import amazing.amazing.tasks.manager_based.locomotion.velocity.amazing_env.amazing_env.flat_env.track_yk.yk_rewards as mdp_yk
-from amazing.amazing.tasks.manager_based.locomotion.velocity.amazing_env.amazing_env.velocity_env_cfg import (
+import amazing.amazing.tasks.manager_based.locomotion.velocity.mdp as mdp
+import amazing.amazing.tasks.manager_based.locomotion.velocity.amazing_env.flat_env.track_jump.jump_rewards as mdp_jump
+from amazing.amazing.tasks.manager_based.locomotion.velocity.amazing_env.velocity_env_cfg import (
     LocomotionVelocityFlatEnvCfg,
     CurriculumCfg,
     CommandsCfg,
@@ -22,7 +22,7 @@ from amazing.assets.amazing import AmazingCfg  # isort: skip
 class AmazingCommandsCfg(CommandsCfg):
     event = mdp.EventCommandCfg(
         asset_name="robot",
-        resampling_time_range=(5.0, 7.0),
+        resampling_time_range=(3.0, 5.0),
         rel_standing_envs=0.1,
         event_during_time=1.2,
         debug_vis=True,
@@ -35,7 +35,7 @@ class AmazingCurriculumCfg(CurriculumCfg):
         func=mdp.modify_base_velocity_range,
         params={
             "term_name": "base_velocity",
-            "mod_range": {"lin_vel_x": (-2.0, 2.0), "ang_vel_z": (-3.14, 3.14)},
+            "mod_range": {"lin_vel_x": (-1.5, 1.5), "ang_vel_z": (-5.0, 5.0)},
             "num_steps": 50000,
         },
     )
@@ -48,20 +48,24 @@ class AmazingRewardsCfg():
         func=mdp.track_lin_vel_xy_link_exp, weight=2.0, params={"command_name": "base_velocity", "std": math.sqrt(0.25)}
     )
     track_ang_vel_z_exp = RewTerm(
-        func=mdp_yk.track_ang_vel_z_link_exp_event, weight=1.0, params={"command_name": "base_velocity", "event_command_name": "event", "std": math.sqrt(0.25)}
+        func=mdp.track_ang_vel_z_link_exp, weight=1.0, params={"command_name": "base_velocity", "std": math.sqrt(0.25)}
     )
 
-    ang_vel_z_event = RewTerm(func=mdp_yk.ang_vel_z_event, weight=5.0, params={"event_command_name": "event"})
     lin_vel_z_event = RewTerm(
-        func=mdp_yk.lin_vel_z_event,
-        weight=15.0,
+        func=mdp_jump.lin_vel_z_event,
+        weight=2.5,
         params={"event_command_name": "event",
                 "event_time_range": (0.3, 0.8),
+                "max_up_vel": 4.0,
+                "up_vel_coef": 20.0,
+                "down_vel_coef": 0.0,
+                "temperature": 2.0,
         }
     )
+
     push_ground_event = RewTerm(
-        func = mdp_yk.reward_push_ground_event,
-        weight=0.1,
+        func = mdp_jump.reward_push_ground_event,
+        weight=0.05,
         params= {
             "event_command_name": "event",
             "event_time_range": (0.3, 0.8),
@@ -70,51 +74,33 @@ class AmazingRewardsCfg():
         }
     )
 
-    # feet_air_time_event = RewTerm(
-    #     func = mdp_yk.feet_air_time_event,
-    #     weight = 10.0,
-    #     params= {
-    #         "event_command_name": "event",
-    #         "threshold": 0.05,
-    #         "sensor_cfg": SceneEntityCfg("contact_forces"),
-    #     }
-    # )
-
-    # reward_complete_event = RewTerm(
-    #     func=mdp_yk.RewardCompleteEvent,
-    #     weight=0.0,
-    #     params={
-    #         "event_command_name": "event",
-    #         "asset_cfg": SceneEntityCfg("robot"),
-    #         "sensor_cfg": SceneEntityCfg("contact_forces", body_names=[".*_wheel_link"]),
-    #     }
-    # )
+    wheel_action_zero_event = RewTerm(func=mdp_jump.wheel_action_zero_event, weight=-0.01)
 
     # -- Penalites
     termination_penalty = RewTerm(func=mdp.is_terminated, weight=-500.0)
 
-    ang_vel_xy_l2 = RewTerm(func=mdp.ang_vel_xy_link_l2, weight=-0.1)
+    ang_vel_xy_l2 = RewTerm(func=mdp.ang_vel_xy_link_l2, weight=-0.05)
 
     joint_deviation_hip = RewTerm(
         func=mdp.joint_deviation_zero_l1,
         weight=-10.0,
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*_hip_joint"])},
+        params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*_calf"])},
     )
 
     dof_pos_limits_hip = RewTerm(
         func=mdp.joint_pos_limits,
         weight=-1.0,
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*_hip_joint")},
+        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*_calf")},
     )
     dof_pos_limits_shoulder = RewTerm(
         func=mdp.joint_pos_limits,
         weight=-1.0,
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*_shoulder_joint")},
+        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*thigh")},
     )
     dof_pos_limits_leg = RewTerm(
         func=mdp.joint_pos_limits,
         weight=-1.0,
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*_leg_joint")},
+        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*_wheel")},
     )
     undesired_contacts = RewTerm(
         func=mdp.undesired_contacts,
@@ -127,23 +113,23 @@ class AmazingRewardsCfg():
     joint_applied_torque_limits = RewTerm(
         func=mdp.applied_torque_limits,
         weight=-0.1,  # default: -0.1
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*_joint")},
+        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*")},
     )
     shoulder_align_l1 = RewTerm(
         func=mdp.joint_align_l1,
         weight=-1.0,  # default: -0.5
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*_shoulder_joint")},
+        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*thigh")},
     )
     leg_align_l1 = RewTerm(
         func=mdp.joint_align_l1,
         weight=-1.0,  # default: -0.5
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*_leg_joint")},
+        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*_wheel")},
     )
-    flat_orientation_l2 = RewTerm(func=mdp.flat_euler_angle_l2, weight=-15.0)
+    flat_orientation_l2 = RewTerm(func=mdp.flat_euler_angle_l2, weight=-30.0)
 
     base_height = RewTerm(
-        func=mdp_yk.base_height_adaptive_l2_event,
-        weight=-25.0,
+        func=mdp_jump.base_height_adaptive_l2_event,
+        weight=-40.0,
         params={
             "target_height": 0.36288,
             "event_command_name": "event",
@@ -151,9 +137,9 @@ class AmazingRewardsCfg():
         },
     )
 
-    dof_torques_l2 = RewTerm(func=mdp.joint_torques_l2, weight=-5.0e-5)
+    dof_torques_l2 = RewTerm(func=mdp.joint_torques_l2, weight=-5.0e-6)
     dof_acc_l2 = RewTerm(func=mdp.joint_acc_l2, weight=-2.5e-7)  # default: -2.5e-7
-    action_rate_l2 = RewTerm(func=mdp.action_rate_l2, weight=-0.03)  # default: -0.01
+    action_rate_l2 = RewTerm(func=mdp.action_rate_l2, weight=-0.01)  # default: -0.01
 
 
 @configclass
@@ -207,7 +193,7 @@ class AmazingFlatEnvCfg(LocomotionVelocityFlatEnvCfg):
         }
         # add base mass should be called here
         self.events.add_base_mass.params["asset_cfg"].body_names = ["base_link"]
-        self.events.add_base_mass.params["mass_distribution_params"] = (-0.75, 3.0)
+        self.events.add_base_mass.params["mass_distribution_params"] = (-0.75, 1.5)
 
         # physics material should be called here
         self.events.physics_material.params["asset_cfg"].body_names = [".*_link"]
@@ -237,9 +223,19 @@ class AmazingFlatEnvCfg(LocomotionVelocityFlatEnvCfg):
         # terminations
         self.terminations.base_contact.params["sensor_cfg"].body_names = [
             "base_link",
-            ".*_hip_link",
-            ".*_shoulder_link",
-            ".*_leg_link",
+            "T1_1",
+            "T2_1",
+            "T3_1",
+            "T4_1",
+            "T5_1",
+            "T6_1",
+            "SR_1",
+            "FR1_1",
+            "WR_1",
+            "SL_1",
+            "FL1_1",
+            "FL2_1",
+            "WL_1",
         ]
 
 
@@ -291,7 +287,7 @@ class AmazingFlatEnvCfg_PLAY(AmazingFlatEnvCfg):
 
         # commands
         self.commands.base_velocity.resampling_time_range = (3.0, 8.0)
-        self.commands.base_velocity.rel_standing_envs = 1.0
+        self.commands.base_velocity.rel_standing_envs = 0.5
         self.commands.base_velocity.ranges.lin_vel_x = (-1.0, 1.0)
         self.commands.base_velocity.ranges.lin_vel_y = (0.0, 0.0)
         self.commands.base_velocity.ranges.ang_vel_z = (-2.5, 2.5)
@@ -301,7 +297,17 @@ class AmazingFlatEnvCfg_PLAY(AmazingFlatEnvCfg):
         # terminations
         self.terminations.base_contact.params["sensor_cfg"].body_names = [
             "base_link",
-            ".*_hip_link",
-            ".*_shoulder_link",
-            ".*_leg_link",
+            "T1_1",
+            "T2_1",
+            "T3_1",
+            "T4_1",
+            "T5_1",
+            "T6_1",
+            "SR_1",
+            "FR1_1",
+            "WR_1",
+            "SL_1",
+            "FL1_1",
+            "FL2_1",
+            "WL_1",
         ]

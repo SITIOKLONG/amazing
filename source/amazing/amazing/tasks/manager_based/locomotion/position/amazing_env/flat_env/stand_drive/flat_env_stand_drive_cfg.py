@@ -14,16 +14,16 @@ from amazing.amazing.tasks.manager_based.locomotion.position.amazing_env.flat_en
     CurriculumCfg,
 )
 
-from amazing.assets.amazing import AmazingCfg as FLAMINGO_CFG  # isort: skip
+from amazing.assets.amazing import AmazingCfg as Amazing_CFG  # isort: skip
 from amazing.amazing.tasks.manager_based.locomotion.position.terrain_config.rough_config import ROUGH_TERRAINS_CFG
 
 # @configclass
-# class FlamingoCurriculumCfg(CurriculumCfg):
+# class AmazingCurriculumCfg(CurriculumCfg):
 
 
 
 @configclass
-class FlamingoRewardsCfg():
+class AmazingRewardsCfg():
     # -- task
     
     reward_track_pos_xy_exp = RewTerm(
@@ -77,51 +77,51 @@ class FlamingoRewardsCfg():
     # joint_deviation_hip = RewTerm(
     #     func=mdp.joint_deviation_zero_l1,
     #     weight=-1.0,
-    #     params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*_hip_joint"])},
+    #     params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*_calf"])},
     # )
     # joint_deviation_shoulder = RewTerm(
     #     func=mdp.joint_deviation_zero_l1,
     #     weight=-0.5,
-    #     params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*_shoulder_joint"])},
+    #     params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*thigh"])},
     # )
 
     dof_pos_limits_hip = RewTerm(
         func=mdp.joint_pos_limits,
         weight=-1.0,
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*_hip_joint")},
+        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*_calf")},
     )
     dof_pos_limits_shoulder = RewTerm(
         func=mdp.joint_pos_limits,
         weight=-1.0,
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*_shoulder_joint")},
+        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*thigh")},
     )
     dof_pos_limits_leg = RewTerm(
         func=mdp.joint_pos_limits,
         weight=-1.0,
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*_leg_joint")},
+        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*_wheel")},
     )
     undesired_contacts = RewTerm(
         func=mdp.undesired_contacts,
         weight=-0.5,
         params={
-            "sensor_cfg": SceneEntityCfg("contact_forces", body_names=[".*_shoulder_link", ".*_hip_link"]),
+            "sensor_cfg": SceneEntityCfg("contact_forces", body_names=["S.*R_1", "F.*2_1"]),
             "threshold": 1.0,
         },
     )
     joint_applied_torque_limits = RewTerm(
         func=mdp.applied_torque_limits,
         weight=-0.1,  # default: -0.1
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*_joint")},
+        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*")},
     )
     shoulder_align_l1 = RewTerm(
         func=mdp.joint_align_l1,
         weight=-0.2,  # default: -0.5
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*_shoulder_joint")},
+        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*thigh")},
     )
     leg_align_l1 = RewTerm(
         func=mdp.joint_align_l1,
         weight=-0.1,  # default: -0.5
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*_leg_joint")},
+        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*_wheel")},
     )
     flat_orientation_l2 = RewTerm(func=mdp.flat_orientation_l2, weight=-5.0)
     base_height = RewTerm(
@@ -141,16 +141,16 @@ class FlamingoRewardsCfg():
 
 
 @configclass
-class FlamingoFlatEnvCfg(LocomotionPositionFlatEnvCfg):
+class AmazingFlatEnvCfg(LocomotionPositionFlatEnvCfg):
 
-    rewards: FlamingoRewardsCfg = FlamingoRewardsCfg()
-    # curriculum: FlamingoCurriculumCfg = FlamingoCurriculumCfg()
+    rewards: AmazingRewardsCfg = AmazingRewardsCfg()
+    # curriculum: AmazingCurriculumCfg = AmazingCurriculumCfg()
 
     def __post_init__(self):
         # post init of parent
         super().__post_init__()
         # scene
-        self.scene.robot = FLAMINGO_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
+        self.scene.robot = Amazing_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
         self.sim.physx.gpu_max_rigid_patch_count = 10 * 2**15
 
 
@@ -201,15 +201,25 @@ class FlamingoFlatEnvCfg(LocomotionPositionFlatEnvCfg):
         # terminations
         self.terminations.base_contact.params["sensor_cfg"].body_names = [
             "base_link",
-            ".*_hip_link",
-            ".*_shoulder_link",
-            ".*_leg_link",
+            "T1_1",
+            "T2_1",
+            "T3_1",
+            "T4_1",
+            "T5_1",
+            "T6_1",
+            "SR_1",
+            "FR1_1",
+            "WR_1",
+            "SL_1",
+            "FL1_1",
+            "FL2_1",
+            "WL_1",
         ]
 
 
 
 @configclass
-class FlamingoFlatEnvCfg_PLAY(FlamingoFlatEnvCfg):
+class AmazingFlatEnvCfg_PLAY(AmazingFlatEnvCfg):
 
     def __post_init__(self):
         # post init of parent
@@ -218,7 +228,7 @@ class FlamingoFlatEnvCfg_PLAY(FlamingoFlatEnvCfg):
         self.sim.render_interval = self.decimation
         self.debug_vis = True
         # scene
-        self.scene.robot = FLAMINGO_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
+        self.scene.robot = Amazing_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
 
         # observations
         #! ****************** Observations setup ******************* !#
@@ -263,7 +273,17 @@ class FlamingoFlatEnvCfg_PLAY(FlamingoFlatEnvCfg):
         # terminations
         self.terminations.base_contact.params["sensor_cfg"].body_names = [
             "base_link",
-            ".*_hip_link",
-            ".*_shoulder_link",
-            ".*_leg_link",
+            "T1_1",
+            "T2_1",
+            "T3_1",
+            "T4_1",
+            "T5_1",
+            "T6_1",
+            "SR_1",
+            "FR1_1",
+            "WR_1",
+            "SL_1",
+            "FL1_1",
+            "FL2_1",
+            "WL_1",
         ]

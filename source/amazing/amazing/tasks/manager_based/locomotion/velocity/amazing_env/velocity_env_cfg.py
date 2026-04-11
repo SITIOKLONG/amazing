@@ -25,15 +25,17 @@ from isaaclab.utils import configclass
 from isaaclab.utils.noise import AdditiveUniformNoiseCfg as Unoise
 from isaaclab.utils.noise import GaussianNoiseCfg as Gnoise
 
-import amazing.tasks.manager_based.locomotion.velocity.amazing_env.mdp as mdp
+import amazing.amazing.tasks.manager_based.locomotion.velocity.mdp as mdp
 from amazing.assets.amazing import AmazingCfg
 
-from .sensors import LiftMaskCfg
+from ..sensors import LiftMaskCfg
 
 ##
 # Pre-defined configs
 ##
-from amazing.tasks.manager_based.locomotion.velocity.terrain_config.stair_config import ROUGH_TERRAINS_CFG
+from amazing.amazing.tasks.manager_based.locomotion.velocity.terrain_config.stair_config import (
+    ROUGH_TERRAINS_CFG,
+)
 
 ##
 # Scene definition
@@ -204,8 +206,8 @@ class ObservationsCfg:
                 "asset_cfg": SceneEntityCfg("robot", joint_names=["left_wheel", "right_wheel"]),
             },            
             scale=0.15)        
-        base_ang_vel = ObsTerm(func=mdp.base_ang_vel, scale=0.25)  # default: -0.15
-        base_euler = ObsTerm(func=mdp.base_euler_angle_link)
+        base_ang_vel = ObsTerm(func=mdp.base_ang_vel_link, scale=0.25)  # default: -0.15
+        # base_euler = ObsTerm(func=mdp.base_euler_angle_link)
         base_projected_gravity = ObsTerm(func=mdp.projected_gravity)  # default: -0.05
         actions = ObsTerm(func=mdp.last_action)
 
@@ -289,7 +291,7 @@ class ObservationsCfg:
             },            
             scale=0.15)   
         base_ang_vel = ObsTerm(func=mdp.base_ang_vel_link, noise=Unoise(n_min=-0.15, n_max=0.15), scale=0.25)  # default: -0.15
-        base_euler = ObsTerm(func=mdp.base_euler_angle_link, noise=Unoise(n_min=-0.125, n_max=0.125))  # default: -0.125
+        # base_euler = ObsTerm(func=mdp.base_euler_angle_link, noise=Unoise(n_min=-0.125, n_max=0.125))  # default: -0.125
         base_projected_gravity = ObsTerm(func=mdp.projected_gravity, noise=Unoise(n_min=-0.05, n_max=0.05))  # default: -0.05
         actions = ObsTerm(func=mdp.last_action)
 
@@ -365,7 +367,7 @@ class EventCfg:
     #     },
     # )
 
-    # randomize_leg_joint_actuator_gains = EventTerm(
+    # randomize_wheel_actuator_gains = EventTerm(
     #     func=mdp.randomize_actuator_gains,
     #     mode="startup",
     #     params={
@@ -399,16 +401,15 @@ class EventCfg:
         },
     )
 
-    # TODO: now for debug
-    # add_base_mass = EventTerm(
-    #     func=mdp.randomize_rigid_body_mass,
-    #     mode="startup",
-    #     params={
-    #         "asset_cfg": SceneEntityCfg("robot", body_names=["base_link"]),
-    #         "mass_distribution_params": (-2.5, 2.5),
-    #         "operation": "add",
-    #     },
-    # )
+    add_base_mass = EventTerm(
+        func=mdp.randomize_rigid_body_mass,
+        mode="startup",
+        params={
+            "asset_cfg": SceneEntityCfg("robot", body_names=["base_link"]),
+            "mass_distribution_params": (-2.5, 2.5),
+            "operation": "add",
+        },
+    )
 
     reset_base = EventTerm(
         func=mdp.reset_root_state_uniform,

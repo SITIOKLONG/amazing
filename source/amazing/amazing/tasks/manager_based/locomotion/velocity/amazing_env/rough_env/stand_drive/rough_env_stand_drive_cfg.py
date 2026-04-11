@@ -8,9 +8,9 @@ from isaaclab.managers import SceneEntityCfg
 from isaaclab.utils import configclass
 
 from isaaclab.managers import CurriculumTermCfg as CurrTerm
-import amazing.amazing.tasks.manager_based.locomotion.velocity.amazing_env.mdp as mdp
-import amazing.amazing.tasks.manager_based.locomotion.velocity.amazing_env.amazing_env.rough_env.stand_drive.drive_rewards as mdp_drive
-from amazing.amazing.tasks.manager_based.locomotion.velocity.amazing_env.amazing_env.velocity_env_cfg import (
+import amazing.amazing.tasks.manager_based.locomotion.velocity.mdp as mdp
+import amazing.amazing.tasks.manager_based.locomotion.velocity.amazing_env.rough_env.stand_drive.drive_rewards as mdp_drive
+from amazing.amazing.tasks.manager_based.locomotion.velocity.amazing_env.velocity_env_cfg import (
     LocomotionVelocityRoughEnvCfg,
     CurriculumCfg,
 )
@@ -102,7 +102,7 @@ class AmazingRewardsCfg():
     joint_deviation_hip = RewTerm(
         func=mdp.joint_deviation_l1,
         weight=-0.1,
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*_hip_joint"])},
+        params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*_calf"])},
     )
     # feet_distance_reward = RewTerm(
     #     func=mdp_drive.reward_feet_distance,
@@ -149,17 +149,17 @@ class AmazingRewardsCfg():
     dof_pos_limits_hip = RewTerm(
         func=mdp.joint_pos_limits,
         weight=-1.0,
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*_hip_joint")},
+        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*_calf")},
     )
     dof_pos_limits_shoulder = RewTerm(
         func=mdp.joint_pos_limits,
         weight=-1.0,
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*_shoulder_joint")},
+        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*thigh")},
     )
     dof_pos_limits_leg = RewTerm(
         func=mdp.joint_pos_limits,
         weight=-1.0,
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*_leg_joint")},
+        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*_wheel")},
     )
     undesired_contacts = RewTerm(
         func=mdp.undesired_contacts,
@@ -172,13 +172,13 @@ class AmazingRewardsCfg():
     # shoulder_align_l1 = RewTerm(
     #     func=mdp.joint_align_l1,
     #     weight=-0.5,  # default: -0.5
-    #     params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*_shoulder_joint")},
+    #     params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*thigh")},
     # )
 
     joint_applied_torque_limits = RewTerm(
         func=mdp.applied_torque_limits,
         weight=-0.025,  # default: -0.1
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*_joint")},
+        params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*")},
     )
 
     flat_orientation_l2 = RewTerm(func=mdp.flat_orientation_l2, weight=-5.0)

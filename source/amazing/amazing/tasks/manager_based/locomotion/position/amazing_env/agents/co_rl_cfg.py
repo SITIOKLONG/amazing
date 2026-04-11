@@ -16,11 +16,11 @@ from scripts.co_rl.core.wrapper import (
 
 
 @configclass
-class FlamingoPPORunnerCfg(CoRlPolicyRunnerCfg):
+class AmazingPPORunnerCfg(CoRlPolicyRunnerCfg):
     num_steps_per_env = 24
     max_iterations = 1500
     save_interval = 100
-    experiment_name = "FlamingoStand-v0"
+    experiment_name = "AmazingStand-v0"
     experiment_description = "test"
     empirical_normalization = False
     policy = CoRlPpoActorCriticCfg(
@@ -45,7 +45,7 @@ class FlamingoPPORunnerCfg(CoRlPolicyRunnerCfg):
     )
 
 @configclass
-class FlamingoFlatPPORunnerCfg_Position(FlamingoPPORunnerCfg):
+class AmazingFlatPPORunnerCfg_Position(AmazingPPORunnerCfg):
     def __post_init__(self):
         super().__post_init__()
 
@@ -56,23 +56,23 @@ class FlamingoFlatPPORunnerCfg_Position(FlamingoPPORunnerCfg):
 
 
 @configclass
-class FlamingoRoughPPORunnerCfg_Position(FlamingoPPORunnerCfg):
+class AmazingRoughPPORunnerCfg_Position(AmazingPPORunnerCfg):
     def __post_init__(self):
         super().__post_init__()
 
         self.max_iterations = 10000
-        self.experiment_name = "Flamingo_Rough_Position"
+        self.experiment_name = "Amazing_Rough_Position"
         self.policy.actor_hidden_dims = [512, 256, 128]
         self.policy.critic_hidden_dims = [512, 256, 128]
 
 ###############################################################################################
 ######################################## [ SRMPPO CONFIG] ######################################
 @configclass
-class FlamingoSRMPPORunnerCfg(CoRlPolicyRunnerCfg):
+class AmazingSRMPPORunnerCfg(CoRlPolicyRunnerCfg):
     num_steps_per_env = 24
     max_iterations = 1500
     save_interval = 250
-    experiment_name = "FlamingoStand-v0"
+    experiment_name = "AmazingStand-v0"
     experiment_description = "test"
     empirical_normalization = False
     policy = CoRlPpoActorCriticCfg(

@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 from isaaclab.assets import Articulation, RigidObject
 from isaaclab.managers import SceneEntityCfg, ManagerTermBase, RewardTermCfg
 from isaaclab.sensors import ContactSensor, RayCaster
-from amazing.amazing.tasks.manager_based.locomotion.velocity.amazing_env.sensors import LiftMask
+from amazing.amazing.tasks.manager_based.locomotion.velocity.sensors import LiftMask
 from isaaclab.utils.math import euler_xyz_from_quat, quat_rotate_inverse
 
 if TYPE_CHECKING:

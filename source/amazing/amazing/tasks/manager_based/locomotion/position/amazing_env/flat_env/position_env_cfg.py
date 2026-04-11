@@ -69,29 +69,26 @@ class MySceneCfg(InteractiveSceneCfg):
     height_scanner = RayCasterCfg(
         prim_path="{ENV_REGEX_NS}/Robot/base_link",
         offset=RayCasterCfg.OffsetCfg(pos=(0.0, 0.0, 20.0)),
-        attach_yaw_only=True,
-        pattern_cfg=patterns.GridPatternCfg(resolution=0.075, size=[0.6, 0.5]),
-        debug_vis=False,
+        pattern_cfg=patterns.GridPatternCfg(resolution=0.07, size=[0.8, 0.8]),
+        debug_vis=True,
         mesh_prim_paths=["/World/ground"],
     )
     base_height_scanner = RayCasterCfg(
         prim_path="{ENV_REGEX_NS}/Robot/base_link",
         offset=RayCasterCfg.OffsetCfg(pos=(0.0, 0.0, 20.0)),
-        attach_yaw_only=True,
         pattern_cfg=patterns.GridPatternCfg(resolution=0.05, size=[0.025, 0.025]),
         debug_vis=True,
         mesh_prim_paths=["/World/ground"],
     )
     left_wheel_height_scanner = RayCasterCfg(
-        prim_path="{ENV_REGEX_NS}/Robot/left_wheel_link",
+        prim_path="{ENV_REGEX_NS}/Robot/WL_1",
         offset=RayCasterCfg.OffsetCfg(pos=(0.0, 0.0, 20.0)),
-        attach_yaw_only=True,
-        pattern_cfg=patterns.GridPatternCfg(resolution=0.05, size=[0.025, 0.025]),
+        pattern_cfg=patterns.GridPatternCfg(resolution=0.05, size=[0.025, 0.025]), # (resolution=0.05, size=[0.025, 0.025])
         debug_vis=True,
         mesh_prim_paths=["/World/ground"],
     )
     right_wheel_height_scanner = RayCasterCfg(
-        prim_path="{ENV_REGEX_NS}/Robot/right_wheel_link",
+        prim_path="{ENV_REGEX_NS}/Robot/WR_1",
         offset=RayCasterCfg.OffsetCfg(pos=(0.0, 0.0, 20.0)),
         attach_yaw_only=True,
         pattern_cfg=patterns.GridPatternCfg(resolution=0.05, size=[0.025, 0.025]),
@@ -99,21 +96,21 @@ class MySceneCfg(InteractiveSceneCfg):
         mesh_prim_paths=["/World/ground"],
     )
     left_mask_sensor = LiftMaskCfg(
-        prim_path="{ENV_REGEX_NS}/Robot/left_wheel_static_link",
+        prim_path="{ENV_REGEX_NS}/Robot/WL_1",
         history_length=10,
         offset=RayCasterCfg.OffsetCfg(pos=(0.0, 0.0, 20.0)),
         attach_yaw_only=True,
-        pattern_cfg=patterns.GridPatternCfg(resolution=0.07, size=[0.29, 0.29]),
+        pattern_cfg=patterns.GridPatternCfg(resolution=0.07, size=[0.35, 0.29]),
         debug_vis=True,
         mesh_prim_paths=["/World/ground"],
         gradient_threshold = 0.03,
     )
     right_mask_sensor = LiftMaskCfg(
-        prim_path="{ENV_REGEX_NS}/Robot/right_wheel_static_link",
+        prim_path="{ENV_REGEX_NS}/Robot/WR_1",
         history_length=10,
         offset=RayCasterCfg.OffsetCfg(pos=(0.0, 0.0, 20.0)),
         attach_yaw_only=True,
-        pattern_cfg=patterns.GridPatternCfg(resolution=0.07, size=[0.29, 0.29]),
+        pattern_cfg=patterns.GridPatternCfg(resolution=0.07, size=[0.35, 0.29]),
         debug_vis=True,
         mesh_prim_paths=["/World/ground"],
         gradient_threshold = 0.03,
@@ -169,23 +166,18 @@ class ActionsCfg:
 
     joint_pos = mdp.JointPositionActionCfg(
         asset_name="robot",
-        joint_names=["left_hip_joint", "right_hip_joint", 
-                     "left_shoulder_joint", "right_shoulder_joint", 
-                     "left_leg_joint", "right_leg_joint"
-                     ],
-        scale=2.0,
+        joint_names=["left_thigh", "right_thigh", "left_calf", "right_calf", "right_abd", "left_abd"], # fixed "arm_.*"
+        scale=1.0,
         use_default_offset=False,
         preserve_order=True,
     )
     wheel_vel = mdp.JointVelocityActionCfg(
         asset_name="robot",
-        joint_names=["left_wheel_joint", "right_wheel_joint"],
-        scale=20.0,
+        joint_names=["left_wheel", "right_wheel"],
+        scale=10.0,
         use_default_offset=False,
         preserve_order=True
     )
-
-
 
 
 @configclass
@@ -198,13 +190,24 @@ class ObservationsCfg:
 
         # observation terms (order preserved)
         
-        joint_pos = ObsTerm(
+        joint_pos= ObsTerm(
             func=mdp.joint_pos,
             params={
-                "asset_cfg": SceneEntityCfg("robot", joint_names=[".*_hip_joint", ".*_shoulder_joint", ".*_leg_joint"])
+                "asset_cfg": SceneEntityCfg("robot", joint_names=["left_thigh", "right_thigh", "left_calf", "right_calf", "right_abd", "left_abd"]),
             },
         )
-        joint_vel = ObsTerm(func=mdp.joint_vel, scale=0.15)  # default: -1.5
+        # joint_arm= ObsTerm(
+        #     func=mdp.joint_pos,
+        #     params={
+        #         "asset_cfg": SceneEntityCfg("robot", joint_names=["arm_.*"]),
+        #     },
+        # )
+        joint_vel = ObsTerm(
+            func=mdp.joint_vel,
+            params={
+                "asset_cfg": SceneEntityCfg("robot", joint_names=["left_wheel", "right_wheel"]),
+            },            
+            scale=0.15)    
         base_ang_vel = ObsTerm(func=mdp.base_ang_vel_link, scale=0.25)  # default: -0.15
         # base_euler = ObsTerm(func=mdp.base_euler_angle_link)
         base_projected_gravity = ObsTerm(func=mdp.projected_gravity)  # default: -0.05
@@ -249,6 +252,7 @@ class ObservationsCfg:
         base_lin_vel_z = ObsTerm(func=mdp.base_lin_vel_z_link)
         base_lin_vel_y = ObsTerm(func=mdp.base_lin_vel_y_link)
         base_lin_vel_x = ObsTerm(func=mdp.base_lin_vel_x_link, scale=2.0)
+
         base_pos_z = ObsTerm(func=mdp.base_pos_z_rel_link, params={"sensor_cfg": SceneEntityCfg("base_height_scanner")})
         current_reward = ObsTerm(func=mdp.current_reward)
 
@@ -274,14 +278,26 @@ class ObservationsCfg:
     @configclass
     class StackPolicyCfg(ObsGroup):
         """Observations for Stack policy group."""
-        joint_pos = ObsTerm(
+        joint_pos= ObsTerm(
             func=mdp.joint_pos,
-            noise=Unoise(n_min=-0.05, n_max=0.05),  # default: -0.04
+            noise=Unoise(n_min=-0.05, n_max=0.05),  # default: -0.05
             params={
-                "asset_cfg": SceneEntityCfg("robot", joint_names=[".*_hip_joint", ".*_shoulder_joint", ".*_leg_joint"])
+                "asset_cfg": SceneEntityCfg("robot", joint_names=["left_thigh", "right_thigh", "left_calf", "right_calf", "right_abd", "left_abd"]),
             },
         )
-        joint_vel = ObsTerm(func=mdp.joint_vel, noise=Unoise(n_min=-1.5, n_max=1.5), scale=0.15)  # default: -1.5
+        # joint_arm= ObsTerm(
+        #     func=mdp.joint_pos,
+        #     params={
+        #         "asset_cfg": SceneEntityCfg("robot", joint_names=["arm_.*"]),
+        #     },
+        # )
+        joint_vel = ObsTerm(
+            func=mdp.joint_vel,
+            noise=Unoise(n_min=-0.05, n_max=0.05),  # default: -0.05
+            params={
+                "asset_cfg": SceneEntityCfg("robot", joint_names=["left_wheel", "right_wheel"]),
+            },            
+            scale=0.15)  
         base_ang_vel = ObsTerm(func=mdp.base_ang_vel_link, noise=Unoise(n_min=-0.15, n_max=0.15), scale=0.25)  # default: -0.15
         # base_euler = ObsTerm(func=mdp.base_euler_angle_link, noise=Unoise(n_min=-0.125, n_max=0.125))  # default: -0.125
         base_projected_gravity = ObsTerm(func=mdp.projected_gravity, noise=Unoise(n_min=-0.05, n_max=0.05))  # default: -0.05
@@ -348,7 +364,7 @@ using relpos obs_stack
 #         joint_pos = ObsTerm(
 #             func=mdp.joint_pos,
 #             params={
-#                 "asset_cfg": SceneEntityCfg("robot", joint_names=[".*_hip_joint", ".*_shoulder_joint", ".*_leg_joint"])
+#                 "asset_cfg": SceneEntityCfg("robot", joint_names=[".*_calf", ".*thigh", ".*_wheel"])
 #             },
 #         )
 #         joint_vel = ObsTerm(func=mdp.joint_vel, scale=0.15)  # default: -1.5
@@ -423,7 +439,7 @@ using relpos obs_stack
 #             func=mdp.joint_pos,
 #             noise=Unoise(n_min=-0.05, n_max=0.05),  # default: -0.04
 #             params={
-#                 "asset_cfg": SceneEntityCfg("robot", joint_names=[".*_hip_joint", ".*_shoulder_joint", ".*_leg_joint"])
+#                 "asset_cfg": SceneEntityCfg("robot", joint_names=[".*_calf", ".*thigh", ".*_wheel"])
 #             },
 #         )
 #         joint_vel = ObsTerm(func=mdp.joint_vel, noise=Unoise(n_min=-1.5, n_max=1.5), scale=0.15)  # default: -1.5
