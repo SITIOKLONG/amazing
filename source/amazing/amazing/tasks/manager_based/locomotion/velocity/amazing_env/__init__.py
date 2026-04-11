@@ -5,8 +5,6 @@
 
 import gymnasium as gym
 
-from . import agents
-
 ##
 # Register Gym environments.
 ##
@@ -18,6 +16,6 @@ gym.register(
     disable_env_checker=True,
     kwargs={
         "env_cfg_entry_point": f"{__name__}.velocity_env_cfg:LocomotionVelocityFlatEnvCfg",
-        "rsl_rl_cfg_entry_point": f"{agents.__name__}.rsl_rl_ppo_cfg:PPORunnerCfg",
+        "co_rl_cfg_entry_point": "amazing.amazing.tasks.manager_based.locomotion.velocity.amazing_env.amazing_env.agents.co_rl_cfg:CoRlPPORunnerCfg",
     },
 )

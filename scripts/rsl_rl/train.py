@@ -82,6 +82,7 @@ from datetime import datetime
 
 import gymnasium as gym
 import torch
+import rsl_rl.runners.on_policy_runner as on_policy_runner_module
 from rsl_rl.runners import DistillationRunner, OnPolicyRunner
 
 from isaaclab.envs import (
@@ -109,6 +110,60 @@ torch.backends.cuda.matmul.allow_tf32 = True
 torch.backends.cudnn.allow_tf32 = True
 torch.backends.cudnn.deterministic = False
 torch.backends.cudnn.benchmark = False
+
+
+def _flatten_by_env(tensor: torch.Tensor) -> torch.Tensor:
+    if tensor.ndim == 0:
+        return tensor.reshape(1, 1)
+    if tensor.ndim == 1:
+        return tensor.unsqueeze(-1)
+    return tensor.reshape(tensor.shape[0], -1)
+
+
+def _dump_tensor_stats(name: str, tensor: torch.Tensor) -> None:
+    finite_mask = torch.isfinite(tensor)
+    finite_values = tensor[finite_mask]
+    min_value = finite_values.min().item() if finite_values.numel() > 0 else float("nan")
+    max_value = finite_values.max().item() if finite_values.numel() > 0 else float("nan")
+    mean_value = finite_values.mean().item() if finite_values.numel() > 0 else float("nan")
+
+    nan_count = int(torch.isnan(tensor).sum().item())
+    inf_count = int(torch.isinf(tensor).sum().item())
+    print(
+        f"[OBS-DEBUG] {name}: shape={tuple(tensor.shape)} nan_count={nan_count} "
+        f"inf_count={inf_count} min={min_value:.6f} max={max_value:.6f} mean={mean_value:.6f}"
+    )
+
+    per_env = _flatten_by_env(tensor)
+    bad_env_ids = torch.nonzero(~torch.isfinite(per_env).all(dim=1), as_tuple=False).squeeze(-1)
+    if bad_env_ids.numel() > 0:
+        first_bad_env_id = int(bad_env_ids[0].item())
+        preview = per_env[first_bad_env_id, :16].detach().cpu().tolist()
+        print(
+            f"[OBS-DEBUG] {name}: first_bad_env={first_bad_env_id} "
+            f"preview_first_16={preview}"
+        )
+
+
+_ORIGINAL_CHECK_NAN = on_policy_runner_module.check_nan
+
+
+def _debug_check_nan(obs, rewards, dones):
+    try:
+        _ORIGINAL_CHECK_NAN(obs, rewards, dones)
+    except ValueError:
+        print("[OBS-DEBUG] check_nan failed. Dumping tensors for diagnosis.")
+        for key, value in obs.items():
+            if isinstance(value, torch.Tensor):
+                _dump_tensor_stats(f"obs[{key}]", value)
+            else:
+                print(f"[OBS-DEBUG] obs[{key}] has unsupported type {type(value)}")
+        _dump_tensor_stats("rewards", rewards)
+        _dump_tensor_stats("dones", dones.to(dtype=torch.float32))
+        raise
+
+
+on_policy_runner_module.check_nan = _debug_check_nan
 
 
 @hydra_task_config(args_cli.task, args_cli.agent)
