@@ -32,7 +32,7 @@ iii. Unzip assets(usd asset) on folder
     path example: lab/flamingo/assets/data/Robots/Flamingo/flamingo_rev01_4_1/
    ```
 
-## Launch script
+  ## Launch script
 ### Train flamingo
   - run it on 'lab.flamingo' root path
   ```
@@ -42,7 +42,7 @@ iii. Unzip assets(usd asset) on folder
   ```
     python scripts/co_rl/train.py --task Isaac-Velocity-Flat-Flamingo-v1-ppo --algo ppo --num_envs 4096 --headless --num_policy_stacks 2 --num_critic_stacks 2
   ```
-### play flamingo
+### play flamingo   
   - run it on 'lab.flamingo' root path
   ```
     python scripts/co_rl/play.py --task {task name} --algo ppo --num_envs 64 --num_policy_stacks {stack number on policy obs} --num_critic_stacks {stack number on critic obs} --load_run {folder name} --plot False

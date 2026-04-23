@@ -5,13 +5,18 @@
 
 from isaaclab.utils import configclass
 
-from scripts.co_rl.core.wrapper.rl_cfg import CoRlPolicyRunnerCfg, CoRlPpoActorCriticCfg, CoRlPpoAlgorithmCfg
+from scripts.co_rl.core.wrapper.rl_cfg import (
+    CoRlPolicyRunnerCfg,
+    CoRlPpoActorCriticCfg,
+    CoRlPpoAlgorithmCfg,
+    CoRlSrmPpoAlgorithmCfg,
+)
 
 
 @configclass
 class CoRlPPORunnerCfg(CoRlPolicyRunnerCfg):
-    num_steps_per_env = 16
-    max_iterations = 1500
+    num_steps_per_env = 24
+    max_iterations = 5000
     save_interval = 100
     experiment_name = "amazing_velocity"
     experiment_description = "co-rl ppo"
@@ -52,3 +57,6 @@ AmazingFlatSRMPPORunnerCfg_Track_Z = CoRlPPORunnerCfg
 AmazingFlatSRMPPORunnerCfg_Track_YK = CoRlPPORunnerCfg
 AmazingFlatSACRunnerCfg_Stand_Drive = CoRlPPORunnerCfg
 AmazingFlatTQCRunnerCfg_Stand_Drive = CoRlPPORunnerCfg
+
+# copy from https://github.com/SITIOKLONG/Isaac-RL-Two-wheel-Legged-Bot/blob/main/lab/flamingo/tasks/manager_based/locomotion/velocity/flamingo_env/agents/co_rl_cfg.py
+# TODO

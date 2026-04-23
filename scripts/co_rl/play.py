@@ -6,16 +6,34 @@
 """Launch Isaac Sim Simulator first."""
 
 import argparse
+import os
+import sys
+
+# Ensure repository root is on sys.path so `from scripts import ...` works
+# when running this file directly (e.g. `python scripts/co_rl/play.py`).
+_REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+if _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
+# also add the `source` folder so the `amazing` package is importable as a top-level package
+_SOURCE_ROOT = os.path.join(_REPO_ROOT, "source")
+if os.path.isdir(_SOURCE_ROOT) and _SOURCE_ROOT not in sys.path:
+    sys.path.insert(0, _SOURCE_ROOT)
 
 from isaaclab.app import AppLauncher
-import matplotlib.pyplot as plt
 
 # local imports
 import cli_args  # isort: skip
-from scripts.co_rl.core.runners import OffPolicyRunner
 
-from scripts.co_rl.core.utils.str2bool import str2bool
-from scripts.co_rl.core.utils.analyzer import Analyzer
+
+def str2bool(v):
+    if isinstance(v, bool):
+        return v
+    if v.lower() in ("yes", "true", "True", "t", "y", "1"):
+        return True
+    elif v.lower() in ("no", "false", "False", "f", "n", "0"):
+        return False
+    else:
+        raise argparse.ArgumentTypeError("Boolean value expected.")
 
 # add argparse arguments
 parser = argparse.ArgumentParser(description="Train an RL agent with CO-RL.")
@@ -44,8 +62,8 @@ parser.add_argument(
 )
 parser.add_argument("--real-time", action="store_true", default=True, help="Run in real-time, if possible.")
 
-parser.add_argument("--num_policy_stacks", type=int, default=2, help="Number of policy stacks.")
-parser.add_argument("--num_critic_stacks", type=int, default=2, help="Number of critic stacks.")
+parser.add_argument("--num_policy_stacks", "--num_policy_stack", type=int, default=2, help="Number of policy stacks.")
+parser.add_argument("--num_critic_stacks", "--num_critic_stack", type=int, default=2, help="Number of critic stacks.")
 
 # append CO-RL cli arguments
 cli_args.add_co_rl_args(parser)
@@ -60,16 +78,20 @@ if args_cli.video:
 app_launcher = AppLauncher(args_cli)
 simulation_app = app_launcher.app
 
+# Isaac startup can prepend pip_prebundle paths that conflict with conda NumPy/SciPy.
+# Keep a single scientific stack by dropping those paths before importing gymnasium.
+sys.path = [path for path in sys.path if "pip_prebundle" not in path]
+
 """Rest everything follows."""
 
 import gymnasium as gym
-import os
 import torch
 
-from scripts.co_rl.core.runners import OnPolicyRunner, SRMOnPolicyRunner
+from core.runners import OffPolicyRunner, OnPolicyRunner, SRMOnPolicyRunner
 from isaaclab.utils.dict import print_dict
+from core.utils.analyzer import Analyzer
 
-from scripts.co_rl.core.wrapper import (
+from core.wrapper import (
     CoRlPolicyRunnerCfg,
     CoRlVecEnvWrapper,
     export_env_as_pdf,
@@ -81,7 +103,12 @@ from scripts.co_rl.core.wrapper import (
 from isaaclab.envs import DirectMARLEnv, multi_agent_to_single_agent
 from isaaclab.utils.assets import retrieve_file_path
 from isaaclab.utils.dict import print_dict
-from isaaclab.utils.pretrained_checkpoint import get_published_pretrained_checkpoint
+try:
+    from isaaclab.utils.pretrained_checkpoint import get_published_pretrained_checkpoint
+except ModuleNotFoundError:
+    def get_published_pretrained_checkpoint(*args, **kwargs):
+        print("[INFO] Pretrained checkpoint utility is unavailable in this IsaacLab version.")
+        return None
 
 
 # Import extensions to set up environment tasks

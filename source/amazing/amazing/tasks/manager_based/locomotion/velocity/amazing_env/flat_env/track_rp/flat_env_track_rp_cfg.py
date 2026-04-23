@@ -80,7 +80,7 @@ class AmazingRewardsCfg():
         func=mdp.undesired_contacts,
         weight=-1.0,
         params={
-            "sensor_cfg": SceneEntityCfg("contact_forces", body_names=["S.*R_1", "F.*2_1"]),
+            "sensor_cfg": SceneEntityCfg("contact_forces", body_names=["FR1_1", "FL1_1", "FR2_1", "FL2_1", "WR_1", "WL_1", "SR_1", "SL_1", "base_link", "T1_1", "T2_1", "T3_1", "T4_1", "T5_1", "T6_1"]),
             "threshold": 1.0,
         },
     )

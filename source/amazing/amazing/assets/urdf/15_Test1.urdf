@@ -7,20 +7,20 @@
 <link name="base_link">
   <inertial>
     <origin xyz="4.933141711705083e-07 0.00972920562471793 0.02958495687682722" rpy="0 0 0"/>
-    <mass value="19.811169104366787"/>
+    <mass value="0.5"/>
     <inertia ixx="0.053862" iyy="0.099701" izz="0.119536" ixy="-1e-06" iyz="-0.004666" ixz="-0.0"/>
   </inertial>
   <visual>
     <origin xyz="0 0 0" rpy="0 0 0"/>
     <geometry>
-      <mesh filename="package://15_Test1_description/meshes/base_link.stl" scale="0.001 0.001 0.001"/>
+      <mesh filename="../meshes/base_link.stl" scale="0.001 0.001 0.001"/>
     </geometry>
     <material name="silver"/>
   </visual>
   <collision>
     <origin xyz="0 0 0" rpy="0 0 0"/>
     <geometry>
-      <mesh filename="package://15_Test1_description/meshes/base_link.stl" scale="0.001 0.001 0.001"/>
+      <mesh filename="../meshes/base_link.stl" scale="0.001 0.001 0.001"/>
     </geometry>
   </collision>
 </link>
@@ -28,20 +28,20 @@
 <link name="SR_1">
   <inertial>
     <origin xyz="-0.04994582879852162 0.004124178621086022 -1.1549903569711695e-05" rpy="0 0 0"/>
-    <mass value="2.0840498282812847"/>
+    <mass value="0.5"/>
     <inertia ixx="0.001768" iyy="0.002792" izz="0.002474" ixy="8.4e-05" iyz="-0.0" ixz="-0.0"/>
   </inertial>
   <visual>
     <origin xyz="0.1055 0.029929 0.02503" rpy="0 0 0"/>
     <geometry>
-      <mesh filename="package://15_Test1_description/meshes/SR_1.stl" scale="0.001 0.001 0.001"/>
+      <mesh filename="../meshes/SR_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
     <material name="silver"/>
   </visual>
   <collision>
     <origin xyz="0.1055 0.029929 0.02503" rpy="0 0 0"/>
     <geometry>
-      <mesh filename="package://15_Test1_description/meshes/SR_1.stl" scale="0.001 0.001 0.001"/>
+      <mesh filename="../meshes/SR_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
   </collision>
 </link>
@@ -49,20 +49,20 @@
 <link name="FR1_1">
   <inertial>
     <origin xyz="-0.008087837347674903 0.017537022898460007 -0.1001974818530239" rpy="0 0 0"/>
-    <mass value="4.143448003039892"/>
+    <mass value="0.5"/>
     <inertia ixx="0.015422" iyy="0.015366" izz="0.00459" ixy="-1.3e-05" iyz="0.00013" ixz="-0.00233"/>
   </inertial>
   <visual>
     <origin xyz="0.168929 0.046929 0.025059" rpy="0 0 0"/>
     <geometry>
-      <mesh filename="package://15_Test1_description/meshes/FR1_1.stl" scale="0.001 0.001 0.001"/>
+      <mesh filename="../meshes/FR1_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
     <material name="silver"/>
   </visual>
   <collision>
     <origin xyz="0.168929 0.046929 0.025059" rpy="0 0 0"/>
     <geometry>
-      <mesh filename="package://15_Test1_description/meshes/FR1_1.stl" scale="0.001 0.001 0.001"/>
+      <mesh filename="../meshes/FR1_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
   </collision>
 </link>
@@ -70,20 +70,20 @@
 <link name="FR2_1">
   <inertial>
     <origin xyz="0.025898325066123218 -6.13777548369443e-08 -0.06374709184280689" rpy="0 0 0"/>
-    <mass value="2.5101125185065984"/>
+    <mass value="0.5"/>
     <inertia ixx="0.007019" iyy="0.008004" izz="0.002004" ixy="-0.0" iyz="0.0" ixz="-6.4e-05"/>
   </inertial>
   <visual>
     <origin xyz="0.194429 0.0295 0.19503" rpy="0 0 0"/>
     <geometry>
-      <mesh filename="package://15_Test1_description/meshes/FR2_1.stl" scale="0.001 0.001 0.001"/>
+      <mesh filename="../meshes/FR2_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
     <material name="silver"/>
   </visual>
   <collision>
     <origin xyz="0.194429 0.0295 0.19503" rpy="0 0 0"/>
     <geometry>
-      <mesh filename="package://15_Test1_description/meshes/FR2_1.stl" scale="0.001 0.001 0.001"/>
+      <mesh filename="../meshes/FR2_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
   </collision>
 </link>
@@ -91,20 +91,20 @@
 <link name="WR_1">
   <inertial>
     <origin xyz="-0.0384706682534153 -1.6207856685934718e-07 5.217660532519375e-07" rpy="0 0 0"/>
-    <mass value="3.8759486776453422"/>
+    <mass value="0.5"/>
     <inertia ixx="0.007859" iyy="0.004387" izz="0.004387" ixy="0.0" iyz="-0.0" ixz="0.0"/>
   </inertial>
   <visual>
     <origin xyz="0.128429 0.0295 0.36503" rpy="0 0 0"/>
     <geometry>
-      <mesh filename="package://15_Test1_description/meshes/WR_1.stl" scale="0.001 0.001 0.001"/>
+      <mesh filename="../meshes/WR_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
     <material name="silver"/>
   </visual>
   <collision>
     <origin xyz="0.128429 0.0295 0.36503" rpy="0 0 0"/>
     <geometry>
-      <mesh filename="package://15_Test1_description/meshes/WR_1.stl" scale="0.001 0.001 0.001"/>
+      <mesh filename="../meshes/WR_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
   </collision>
 </link>
@@ -112,20 +112,20 @@
 <link name="SL_1">
   <inertial>
     <origin xyz="0.04997436484103322 0.00412417848770889 2.3677663746335398e-07" rpy="0 0 0"/>
-    <mass value="2.0840497794889576"/>
+    <mass value="0.5"/>
     <inertia ixx="0.001768" iyy="0.002794" izz="0.002475" ixy="-8.4e-05" iyz="-0.0" ixz="0.0"/>
   </inertial>
   <visual>
     <origin xyz="-0.1055 0.029929 0.02503" rpy="0 0 0"/>
     <geometry>
-      <mesh filename="package://15_Test1_description/meshes/SL_1.stl" scale="0.001 0.001 0.001"/>
+      <mesh filename="../meshes/SL_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
     <material name="silver"/>
   </visual>
   <collision>
     <origin xyz="-0.1055 0.029929 0.02503" rpy="0 0 0"/>
     <geometry>
-      <mesh filename="package://15_Test1_description/meshes/SL_1.stl" scale="0.001 0.001 0.001"/>
+      <mesh filename="../meshes/SL_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
   </collision>
 </link>
@@ -133,20 +133,20 @@
 <link name="FL1_1">
   <inertial>
     <origin xyz="0.008088038269517012 0.01756571701590443 -0.10019704473511598" rpy="0 0 0"/>
-    <mass value="4.143447954247557"/>
+    <mass value="0.5"/>
     <inertia ixx="0.015422" iyy="0.015366" izz="0.00459" ixy="9e-06" iyz="0.000139" ixz="0.00233"/>
   </inertial>
   <visual>
     <origin xyz="-0.169 0.048429 0.02503" rpy="0 0 0"/>
     <geometry>
-      <mesh filename="package://15_Test1_description/meshes/FL1_1.stl" scale="0.001 0.001 0.001"/>
+      <mesh filename="../meshes/FL1_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
     <material name="silver"/>
   </visual>
   <collision>
     <origin xyz="-0.169 0.048429 0.02503" rpy="0 0 0"/>
     <geometry>
-      <mesh filename="package://15_Test1_description/meshes/FL1_1.stl" scale="0.001 0.001 0.001"/>
+      <mesh filename="../meshes/FL1_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
   </collision>
 </link>
@@ -154,20 +154,20 @@
 <link name="FL2_1">
   <inertial>
     <origin xyz="-0.025898123605740425 2.8016524133631093e-07 -0.06374753785449166" rpy="0 0 0"/>
-    <mass value="2.510112518506589"/>
+    <mass value="0.5"/>
     <inertia ixx="0.007019" iyy="0.008004" izz="0.002004" ixy="0.0" iyz="0.0" ixz="6.4e-05"/>
   </inertial>
   <visual>
     <origin xyz="-0.1945 0.030858 0.195" rpy="0 0 0"/>
     <geometry>
-      <mesh filename="package://15_Test1_description/meshes/FL2_1.stl" scale="0.001 0.001 0.001"/>
+      <mesh filename="../meshes/FL2_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
     <material name="silver"/>
   </visual>
   <collision>
     <origin xyz="-0.1945 0.030858 0.195" rpy="0 0 0"/>
     <geometry>
-      <mesh filename="package://15_Test1_description/meshes/FL2_1.stl" scale="0.001 0.001 0.001"/>
+      <mesh filename="../meshes/FL2_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
   </collision>
 </link>
@@ -175,20 +175,20 @@
 <link name="WL_1">
   <inertial>
     <origin xyz="0.03847086149888668 3.7216101965789616e-07 7.408434787858909e-08" rpy="0 0 0"/>
-    <mass value="0.49375167072519255"/>
+    <mass value="0.5"/>
     <inertia ixx="0.001001" iyy="0.000559" izz="0.000559" ixy="0.0" iyz="0.0" ixz="-0.0"/>
   </inertial>
   <visual>
     <origin xyz="-0.1285 0.030858 0.365" rpy="0 0 0"/>
     <geometry>
-      <mesh filename="package://15_Test1_description/meshes/WL_1.stl" scale="0.001 0.001 0.001"/>
+      <mesh filename="../meshes/WL_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
     <material name="silver"/>
   </visual>
   <collision>
     <origin xyz="-0.1285 0.030858 0.365" rpy="0 0 0"/>
     <geometry>
-      <mesh filename="package://15_Test1_description/meshes/WL_1.stl" scale="0.001 0.001 0.001"/>
+      <mesh filename="../meshes/WL_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
   </collision>
 </link>
@@ -196,20 +196,20 @@
 <link name="T1_1">
   <inertial>
     <origin xyz="-0.00013659461207302193 0.00885469677921999 -0.03042724917033771" rpy="0 0 0"/>
-    <mass value="0.1090568786472829"/>
+    <mass value="0.5"/>
     <inertia ixx="0.000118" iyy="2.7e-05" izz="0.000114" ixy="1e-06" iyz="2e-06" ixz="0.0"/>
   </inertial>
   <visual>
     <origin xyz="0.0 -0.1363 0.01515" rpy="0 0 0"/>
     <geometry>
-      <mesh filename="package://15_Test1_description/meshes/T1_1.stl" scale="0.001 0.001 0.001"/>
+      <mesh filename="../meshes/T1_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
     <material name="silver"/>
   </visual>
   <collision>
     <origin xyz="0.0 -0.1363 0.01515" rpy="0 0 0"/>
     <geometry>
-      <mesh filename="package://15_Test1_description/meshes/T1_1.stl" scale="0.001 0.001 0.001"/>
+      <mesh filename="../meshes/T1_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
   </collision>
 </link>
@@ -217,20 +217,20 @@
 <link name="T2_1">
   <inertial>
     <origin xyz="-0.020971261314957065 0.002338268870935578 0.07306051362884143" rpy="0 0 0"/>
-    <mass value="1.186572261162841"/>
+    <mass value="0.5"/>
     <inertia ixx="0.001802" iyy="0.002043" izz="0.000522" ixy="1e-05" iyz="-0.000157" ixz="1.8e-05"/>
   </inertial>
   <visual>
     <origin xyz="-0.018129 -0.190145 0.04355" rpy="0 0 0"/>
     <geometry>
-      <mesh filename="package://15_Test1_description/meshes/T2_1.stl" scale="0.001 0.001 0.001"/>
+      <mesh filename="../meshes/T2_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
     <material name="silver"/>
   </visual>
   <collision>
     <origin xyz="-0.018129 -0.190145 0.04355" rpy="0 0 0"/>
     <geometry>
-      <mesh filename="package://15_Test1_description/meshes/T2_1.stl" scale="0.001 0.001 0.001"/>
+      <mesh filename="../meshes/T2_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
   </collision>
 </link>
@@ -238,20 +238,20 @@
 <link name="T3_1">
   <inertial>
     <origin xyz="-0.01830986118101429 0.0028489735049049836 -0.07724407357886467" rpy="0 0 0"/>
-    <mass value="1.0987230693934555"/>
+    <mass value="0.5  "/>
     <inertia ixx="0.001755" iyy="0.002006" izz="0.000389" ixy="2e-06" iyz="4.5e-05" ixz="9e-06"/>
   </inertial>
   <visual>
     <origin xyz="-0.01451 -0.216837 -0.070328" rpy="0 0 0"/>
     <geometry>
-      <mesh filename="package://15_Test1_description/meshes/T3_1.stl" scale="0.001 0.001 0.001"/>
+      <mesh filename="../meshes/T3_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
     <material name="silver"/>
   </visual>
   <collision>
     <origin xyz="-0.01451 -0.216837 -0.070328" rpy="0 0 0"/>
     <geometry>
-      <mesh filename="package://15_Test1_description/meshes/T3_1.stl" scale="0.001 0.001 0.001"/>
+      <mesh filename="../meshes/T3_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
   </collision>
 </link>
@@ -259,20 +259,20 @@
 <link name="T4_1">
   <inertial>
     <origin xyz="-0.025087096987514552 -4.382030479882504e-05 -0.033549441292861096" rpy="0 0 0"/>
-    <mass value="0.505290360000207"/>
+    <mass value="0.1"/>
     <inertia ixx="0.000164" iyy="0.000293" izz="0.000199" ixy="-1e-06" iyz="-1e-06" ixz="-3.2e-05"/>
   </inertial>
   <visual>
     <origin xyz="-0.015629 -0.221912 0.064806" rpy="0 0 0"/>
     <geometry>
-      <mesh filename="package://15_Test1_description/meshes/T4_1.stl" scale="0.001 0.001 0.001"/>
+      <mesh filename="../meshes/T4_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
     <material name="silver"/>
   </visual>
   <collision>
     <origin xyz="-0.015629 -0.221912 0.064806" rpy="0 0 0"/>
     <geometry>
-      <mesh filename="package://15_Test1_description/meshes/T4_1.stl" scale="0.001 0.001 0.001"/>
+      <mesh filename="../meshes/T4_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
   </collision>
 </link>
@@ -280,20 +280,20 @@
 <link name="T5_1">
   <inertial>
     <origin xyz="-0.0003838173090785343 -0.00643148864267451 -0.026114471330503222" rpy="0 0 0"/>
-    <mass value="0.691185972108562"/>
+    <mass value="0.1"/>
     <inertia ixx="0.00046" iyy="0.000329" izz="0.000297" ixy="5e-06" iyz="-7.9e-05" ixz="1e-06"/>
   </inertial>
   <visual>
     <origin xyz="0.002219 -0.221196 0.122983" rpy="0 0 0"/>
     <geometry>
-      <mesh filename="package://15_Test1_description/meshes/T5_1.stl" scale="0.001 0.001 0.001"/>
+      <mesh filename="../meshes/T5_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
     <material name="silver"/>
   </visual>
   <collision>
     <origin xyz="0.002219 -0.221196 0.122983" rpy="0 0 0"/>
     <geometry>
-      <mesh filename="package://15_Test1_description/meshes/T5_1.stl" scale="0.001 0.001 0.001"/>
+      <mesh filename="../meshes/T5_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
   </collision>
 </link>
@@ -301,20 +301,20 @@
 <link name="T6_1">
   <inertial>
     <origin xyz="0.020775626752775857 0.0288787937129181 -0.00045513563645946387" rpy="0 0 0"/>
-    <mass value="0.021934067900310803"/>
+    <mass value="0.05"/>
     <inertia ixx="1e-05" iyy="3e-06" izz="1.2e-05" ixy="0.0" iyz="1e-06" ixz="-0.0"/>
   </inertial>
   <visual>
     <origin xyz="0.021619 -0.241113 0.143383" rpy="0 0 0"/>
     <geometry>
-      <mesh filename="package://15_Test1_description/meshes/T6_1.stl" scale="0.001 0.001 0.001"/>
+      <mesh filename="../meshes/T6_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
     <material name="silver"/>
   </visual>
   <collision>
     <origin xyz="0.021619 -0.241113 0.143383" rpy="0 0 0"/>
     <geometry>
-      <mesh filename="package://15_Test1_description/meshes/T6_1.stl" scale="0.001 0.001 0.001"/>
+      <mesh filename="../meshes/T6_1.stl" scale="0.001 0.001 0.001"/>
     </geometry>
   </collision>
 </link>

@@ -5,7 +5,7 @@ import os
 
 AmazingCfg = ArticulationCfg(
     spawn=sim_utils.UsdFileCfg(
-        usd_path=os.getcwd() + "/source/amazing/amazing/assets/15_Test1.usd",
+        usd_path=os.getcwd() + "/source/amazing/amazing/assets/15_Test1/15_Test1.usd",
         # usd_path="/home/rl/jacksit/newton/RmLab/source/RmLab/RmLab/assets/dogleg/dogleg4/dogleg_converter/dogleg4.usda",
         scale=(1.0, 1.0, 1.0),
         activate_contact_sensors=True,
@@ -45,12 +45,12 @@ AmazingCfg = ArticulationCfg(
                 ".*": 0.0,      # set to zero for using velocity control
             },
             effort_limit={
-                ".*": 40.0,
+                ".*": 60.0,
             },
-            saturation_effort=60.0,
-            velocity_limit=20.0,   # TODO: need check for real velocity
+            saturation_effort=120.0,
+            velocity_limit=2000.0,   # TODO: need check for real velocity
             damping={
-                ".*": 100.0,
+                ".*": 1.0,
             },
             armature=0.01,
             friction=0.0,
@@ -60,16 +60,16 @@ AmazingCfg = ArticulationCfg(
             velocity_limit_sim=1e9,
             effort_limit_sim=1e9,
             stiffness={
-                ".*": 70.0,      # set to zero for using velocity control
+                ".*": 300.0,      # set to zero for using velocity control
             },
             effort_limit={
-                ".*": 40.0,
+                ".*": 100.0,
             },
-            velocity_limit=20.0,   # TODO: need check for real velocity
+            velocity_limit=300.0,   # TODO: need check for real velocity
             min_delay=0,  # physics time steps (min: 5.0 * 0 = 0.0ms)
-            max_delay=4,  # physics time steps (max: 5.0 * 4 = 20.0ms)
+            max_delay=2,  # physics time steps (max: 5.0 * 2 = 10.0ms)
             damping={
-                ".*": 0.7,
+                ".*": 4.0,
             },
             armature=0.01,
             friction=0.0,
@@ -79,16 +79,16 @@ AmazingCfg = ArticulationCfg(
             velocity_limit_sim=1e9,
             effort_limit_sim=1e9,
             stiffness={
-                ".*": 70.0,      # set to zero for using velocity control
+                ".*": 300.0,      # set to zero for using velocity control
             },
             effort_limit={
-                ".*": 40.0,
+                ".*": 100.0,
             },
-            velocity_limit=20.0,   # TODO: need check for real velocity
+            velocity_limit=300.0,   # TODO: need check for real velocity
             min_delay=0,  # physics time steps (min: 5.0 * 0 = 0.0ms)
-            max_delay=4,  # physics time steps (max: 5.0 * 4 = 20.0ms)
+            max_delay=2,  # physics time steps (max: 5.0 * 4 = 20.0ms)
             damping={
-                ".*": 0.7,
+                ".*": 4.0,
             },
             armature=0.01,
             friction=0.0,
@@ -98,16 +98,16 @@ AmazingCfg = ArticulationCfg(
             velocity_limit_sim=1e9,
             effort_limit_sim=1e9,
             stiffness={
-                ".*": 70.0,      # set to zero for using velocity control
+                ".*": 300.0,      # set to zero for using velocity control
             },
             effort_limit={
-                ".*": 40.0,
+                ".*": 100.0,
             },
-            velocity_limit=20.0,   # TODO: need check for real velocity
+            velocity_limit=300.0,   # TODO: need check for real velocity
             min_delay=0,  # physics time steps (min: 5.0 * 0 = 0.0ms)
-            max_delay=4,  # physics time steps (max: 5.0 * 4 = 20.0ms)
+            max_delay=2,  # physics time steps (max: 5.0 * 4 = 20.0ms)
             damping={
-                ".*": 0.7,
+                ".*": 4.0,
             },
             armature=0.01,
             friction=0.0,
@@ -120,11 +120,11 @@ AmazingCfg = ArticulationCfg(
                 ".*": 70.0,      # set to zero for using velocity control
             },
             effort_limit={
-                ".*": 40.0,
+                ".*": 100.0,
             },
-            velocity_limit=5.0,   # TODO: need check for real velocity
+            velocity_limit=300.0,   # TODO: need check for real velocity
             min_delay=0,  # physics time steps (min: 5.0 * 0 = 0.0ms)
-            max_delay=4,  # physics time steps (max: 5.0 * 4 = 20.0ms)
+            max_delay=2,  # physics time steps (max: 5.0 * 4 = 20.0ms)
             damping={
                 ".*": 5.0,
             },
