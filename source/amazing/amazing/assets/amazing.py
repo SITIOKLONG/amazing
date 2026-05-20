@@ -45,17 +45,17 @@ AmazingCfg = ArticulationCfg(
                 ".*": 0.0,      # set to zero for using velocity control
             },
             effort_limit={
-                ".*": 60.0,
+                ".*": 9.0,
             },
-            saturation_effort=120.0,
-            velocity_limit=2000.0,   # TODO: need check for real velocity
+            saturation_effort=20.0,
+            velocity_limit=300.0,   # TODO: need check for real velocity
             damping={
                 ".*": 1.0,
             },
             armature=0.01,
             friction=0.0,
         ),
-        "calf": DelayedPDActuatorCfg(    # position contorl
+        "calf": DCMotorCfg(    # position contorl
             joint_names_expr=[".*_calf"],
             velocity_limit_sim=1e9,
             effort_limit_sim=1e9,
@@ -63,56 +63,59 @@ AmazingCfg = ArticulationCfg(
                 ".*": 300.0,      # set to zero for using velocity control
             },
             effort_limit={
-                ".*": 100.0,
+                ".*": 30.0,
             },
+            saturation_effort=60.0,
             velocity_limit=300.0,   # TODO: need check for real velocity
-            min_delay=0,  # physics time steps (min: 5.0 * 0 = 0.0ms)
-            max_delay=2,  # physics time steps (max: 5.0 * 2 = 10.0ms)
+            # min_delay=0,  # physics time steps (min: 5.0 * 0 = 0.0ms)
+            # max_delay=2,  # physics time steps (max: 5.0 * 2 = 10.0ms)
             damping={
                 ".*": 4.0,
             },
             armature=0.01,
             friction=0.0,
         ),
-        "thigh": DelayedPDActuatorCfg(    # position contorl
+        "thigh": DCMotorCfg(    # position contorl
             joint_names_expr=[".*_thigh"],
             velocity_limit_sim=1e9,
             effort_limit_sim=1e9,
             stiffness={
-                ".*": 300.0,      # set to zero for using velocity control
+                ".*": 0.0,      # set to zero for using velocity control
             },
             effort_limit={
-                ".*": 100.0,
+                ".*": 30.0,
             },
-            velocity_limit=300.0,   # TODO: need check for real velocity
-            min_delay=0,  # physics time steps (min: 5.0 * 0 = 0.0ms)
-            max_delay=2,  # physics time steps (max: 5.0 * 4 = 20.0ms)
+            saturation_effort=60.0,
+            velocity_limit=1000.0,   # TODO: need check for real velocity
+            # min_delay=0,  # physics time steps (min: 5.0 * 0 = 0.0ms)
+            # max_delay=2,  # physics time steps (max: 5.0 * 4 = 20.0ms)
             damping={
-                ".*": 4.0,
+                ".*": 1.0,
             },
             armature=0.01,
             friction=0.0,
         ),
-        "abd": DelayedPDActuatorCfg(    # position contorl
+        "abd": DCMotorCfg(    # position contorl
             joint_names_expr=[".*_abd"],
             velocity_limit_sim=1e9,
             effort_limit_sim=1e9,
             stiffness={
                 ".*": 300.0,      # set to zero for using velocity control
-            },
+            },  
             effort_limit={
-                ".*": 100.0,
+                ".*": 30.0,
             },
+            saturation_effort=60.0,
             velocity_limit=300.0,   # TODO: need check for real velocity
-            min_delay=0,  # physics time steps (min: 5.0 * 0 = 0.0ms)
-            max_delay=2,  # physics time steps (max: 5.0 * 4 = 20.0ms)
+            # min_delay=0,  # physics time steps (min: 5.0 * 0 = 0.0ms)
+            # max_delay=2,  # physics time steps (max: 5.0 * 4 = 20.0ms)
             damping={
                 ".*": 4.0,
             },
             armature=0.01,
             friction=0.0,
         ),
-        "arm": DelayedPDActuatorCfg(    # position contorl
+        "arm": DCMotorCfg(    # position contorl
             joint_names_expr=["arm_.*"],
             velocity_limit_sim=1e9,
             effort_limit_sim=1e9,
@@ -120,11 +123,12 @@ AmazingCfg = ArticulationCfg(
                 ".*": 70.0,      # set to zero for using velocity control
             },
             effort_limit={
-                ".*": 100.0,
+                ".*": 9.0,
             },
-            velocity_limit=300.0,   # TODO: need check for real velocity
-            min_delay=0,  # physics time steps (min: 5.0 * 0 = 0.0ms)
-            max_delay=2,  # physics time steps (max: 5.0 * 4 = 20.0ms)
+            saturation_effort=20.0,
+            velocity_limit=10.0,   # TODO: need check for real velocity
+            # min_delay=0,  # physics time steps (min: 5.0 * 0 = 0.0ms)
+            # max_delay=2,  # physics time steps (max: 5.0 * 4 = 20.0ms)
             damping={
                 ".*": 5.0,
             },

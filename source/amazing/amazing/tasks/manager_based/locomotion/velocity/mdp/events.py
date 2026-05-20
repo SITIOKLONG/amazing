@@ -569,3 +569,40 @@ def reset_joints_by_offset(
 
     # set into the physics simulation
     asset.write_joint_state_to_sim(joint_pos, joint_vel, env_ids=env_ids)
+
+def apply_pull_force_z(
+    env: 'ManagerBasedEnv',
+    env_ids: torch.Tensor,
+    force_range: tuple[float, float],
+    orientation_gate_threshold: float | None = None,
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot", body_names="base_link"),
+):
+    """Apply a persistent upward (+Z world) external force on the specified body.
+
+    Used for HoST-style stand-up bootstrapping (https://github.com/InternRobotics/HoST):
+    a 'helper hand' pulls the base up while the policy is still learning. The force is
+    sampled per-env when this term fires and persists until overwritten. If
+    ``orientation_gate_threshold`` is set, the force is only applied while the base
+    z-axis is roughly upright; otherwise the stored external force is cleared.
+
+    Args:
+        force_range: (min_N, max_N) range of upward force magnitude in Newtons.
+        orientation_gate_threshold: require projected gravity z < -threshold.
+        asset_cfg: target asset + body. Defaults to robot/base_link.
+    """
+    asset: Articulation | RigidObject = env.scene[asset_cfg.name]
+    if env_ids is None:
+        env_ids = torch.arange(env.scene.num_envs, device=asset.device)
+    num_bodies = len(asset_cfg.body_ids) if isinstance(asset_cfg.body_ids, list) else asset.num_bodies
+    n = len(env_ids)
+    forces = torch.zeros((n, num_bodies, 3), device=asset.device)
+    torques = torch.zeros((n, num_bodies, 3), device=asset.device)
+    forces[..., 2] = math_utils.sample_uniform(
+        force_range[0], force_range[1], (n, num_bodies), asset.device
+    )
+    if orientation_gate_threshold is not None:
+        upright_mask = asset.data.projected_gravity_b[env_ids, 2] < -orientation_gate_threshold
+        forces *= upright_mask.view(n, 1, 1)
+    asset.set_external_force_and_torque(
+        forces, torques, env_ids=env_ids, body_ids=asset_cfg.body_ids
+    )

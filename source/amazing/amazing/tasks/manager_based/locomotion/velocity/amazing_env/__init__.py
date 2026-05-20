@@ -20,7 +20,7 @@ from . import (
 ################################################################################################
 gym.register(
     id="Isaac-Velocity-Flat-Amazing-v0-ppo",
-    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    entry_point="amazing.amazing.tasks.manager_based.locomotion.velocity.amazing_env.flat_env.stand_drive.flat_env_stand_drive_env:AmazingFlatStandDriveEnv",
     disable_env_checker=True,
     kwargs={
         "env_cfg_entry_point": flat_env.flat_env_stand_drive_cfg.AmazingFlatEnvCfg,
@@ -30,7 +30,7 @@ gym.register(
 
 gym.register(
     id="Isaac-Velocity-Flat-Amazing-Play-v0-ppo",
-    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    entry_point="amazing.amazing.tasks.manager_based.locomotion.velocity.amazing_env.flat_env.stand_drive.flat_env_stand_drive_env:AmazingFlatStandDriveEnv",
     disable_env_checker=True,
     kwargs={
         "env_cfg_entry_point": flat_env.flat_env_stand_drive_cfg.AmazingFlatEnvCfg_PLAY,
@@ -140,7 +140,7 @@ gym.register(
 ##########################################SRM###################################################
 gym.register(
     id="Isaac-Velocity-Flat-Amazing-v0-srmppo",
-    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    entry_point="amazing.amazing.tasks.manager_based.locomotion.velocity.amazing_env.flat_env.stand_drive.flat_env_stand_drive_env:AmazingFlatStandDriveEnv",
     disable_env_checker=True,
     kwargs={
         "env_cfg_entry_point": flat_env.flat_env_stand_drive_cfg.AmazingFlatEnvCfg,
@@ -150,7 +150,7 @@ gym.register(
 
 gym.register(
     id="Isaac-Velocity-Flat-Amazing-v0-srmppo-Play",
-    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    entry_point="amazing.amazing.tasks.manager_based.locomotion.velocity.amazing_env.flat_env.stand_drive.flat_env_stand_drive_env:AmazingFlatStandDriveEnv",
     disable_env_checker=True,
     kwargs={
         "env_cfg_entry_point": flat_env.flat_env_stand_drive_cfg.AmazingFlatEnvCfg_PLAY,
@@ -200,7 +200,7 @@ gym.register(
 #########################################CoRL###################################################
 gym.register(
     id="Isaac-Velocity-Flat-Amazing-v3-sac",
-    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    entry_point="amazing.amazing.tasks.manager_based.locomotion.velocity.amazing_env.flat_env.stand_drive.flat_env_stand_drive_env:AmazingFlatStandDriveEnv",
     disable_env_checker=True,
     kwargs={
         "env_cfg_entry_point": flat_env.flat_env_stand_drive_cfg.AmazingFlatEnvCfg,
@@ -210,7 +210,7 @@ gym.register(
 
 gym.register(
     id="Isaac-Velocity-Flat-Amazing-v3-tqc",
-    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    entry_point="amazing.amazing.tasks.manager_based.locomotion.velocity.amazing_env.flat_env.stand_drive.flat_env_stand_drive_env:AmazingFlatStandDriveEnv",
     disable_env_checker=True,
     kwargs={
         "env_cfg_entry_point": flat_env.flat_env_stand_drive_cfg.AmazingFlatEnvCfg,

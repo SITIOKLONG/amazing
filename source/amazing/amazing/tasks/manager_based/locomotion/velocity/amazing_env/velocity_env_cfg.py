@@ -164,14 +164,14 @@ class ActionsCfg:
 
     joint_pos = mdp.JointPositionActionCfg(
         asset_name="robot",
-        joint_names=["left_thigh", "right_thigh", "left_calf", "right_calf", "right_abd", "left_abd", "arm_base", "arm_pitch1", "arm_pitch2", "arm_pitch3", "arm_yaw", "arm_claim"],
+        joint_names=["left_calf", "right_calf", "right_abd", "left_abd", "arm_base", "arm_pitch1", "arm_pitch2", "arm_pitch3", "arm_yaw", "arm_claim"],
         scale=1.0,
         use_default_offset=False,
         preserve_order=True,
     )
     wheel_vel = mdp.JointVelocityActionCfg(
         asset_name="robot",
-        joint_names=["left_wheel", "right_wheel"],
+        joint_names=["left_wheel", "right_wheel", "left_thigh", "right_thigh"],
         scale=40.0,
         use_default_offset=False,
         preserve_order=True
@@ -416,14 +416,22 @@ class EventCfg:
         func=mdp.reset_root_state_uniform,
         mode="reset",
         params={
-            "pose_range": {"x": (-0.5, 0.5), "y": (-0.5, 0.5), "yaw": (-3.14, 3.14)},
+            "asset_cfg": SceneEntityCfg("robot"),  # No joint_names needed for root state
+            "pose_range": {
+                "x": (-5.0, 5.0),       # Randomize x position (meters)
+                "y": (-5.0, 5.0),       # Randomize y position (meters)
+                "z": (0.05, 0.05),     # Uncomment and set to fixed height or small range if needed
+                "roll": (-1.57, 1.57), # Small randomization (radians); omit for no change
+                "pitch": (3.1416, 3.1416),
+                "yaw": (-3.1416, 3.1416),  # Full random yaw; omit or narrow for less rotation
+            },
             "velocity_range": {
                 "x": (-0.5, 0.5),
-                "y": (-0.0, 0.5),
-                "z": (-0.0, 0.5),
-                "roll": (-0.0, 0.0),
-                "pitch": (-0.0, 0.0),
-                "yaw": (-0.0, 0.0),
+                "y": (0.0, 0.5),
+                "z": (0.0, 0.5),
+                "roll": (0.0, 0.0),
+                "pitch": (0.0, 0.0),
+                "yaw": (0.0, 0.0),
             },
         },
     )
@@ -432,7 +440,8 @@ class EventCfg:
         func=mdp.reset_joints_by_offset,
         mode="reset",
         params={
-            "position_range": (-0.5, 0.5),
+            "asset_cfg": SceneEntityCfg("robot", joint_names=[".*"]),
+            "position_range": (-180.0, 180.0),
             "velocity_range": (0.0, 0.0),
         },
     )
@@ -471,8 +480,8 @@ class TerminationsCfg:
         params={"asset_cfg": SceneEntityCfg("robot"), "distance_buffer": 3.0},
         time_out=True,
     )
-    bad_orientation = DoneTerm(
-        func=mdp.bad_orientation, params={"limit_angle": 0.7})
+    # bad_orientation = DoneTerm(
+    #     func=mdp.bad_orientation, params={"limit_angle": 0.7})
 
 
 @configclass

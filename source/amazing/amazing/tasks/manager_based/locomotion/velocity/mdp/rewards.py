@@ -234,6 +234,83 @@ def flat_euler_angle_exp(env: ManagerBasedRLEnv, temperature: float, asset_cfg: 
     rp = torch.stack((roll, pitch), dim=-1)
     return torch.exp(-temperature * torch.sum(torch.abs(rp), dim=1))
 
+
+def host_upright_exp(
+    env: ManagerBasedRLEnv,
+    sigma: float = 1.0,
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+) -> torch.Tensor:
+    """HoST-style positive reward for aligning the base z-axis with world up."""
+    asset: RigidObject = env.scene[asset_cfg.name]
+    upright_error = torch.square(asset.data.projected_gravity_b[:, 2] + 1.0)
+    return torch.exp(-upright_error / sigma)
+
+
+def host_base_height_exp(
+    env: ManagerBasedRLEnv,
+    target_height: float,
+    sigma: float = 0.25,
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+    sensor_cfg: SceneEntityCfg | None = None,
+) -> torch.Tensor:
+    """HoST-style positive reward for reaching the target base height."""
+    asset: RigidObject = env.scene[asset_cfg.name]
+    if sensor_cfg is not None:
+        sensor: RayCaster = env.scene[sensor_cfg.name]
+        target_height = target_height + torch.mean(sensor.data.ray_hits_w[..., 2], dim=1)
+    height_error = torch.square(asset.data.root_link_pos_w[:, 2] - target_height)
+    return torch.exp(-height_error / sigma)
+
+
+def _host_upright_gate(env, threshold):
+    """1.0 when base z-axis is roughly aligned with world up, else 0.0.
+
+    Used to gate HoST "post-task" rewards so they only fire after the robot stands
+    (mirrors HoST's ``post_task = True`` flag). With no threshold the gate is open.
+    """
+    if threshold is None:
+        return 1.0
+    asset = env.scene["robot"]
+    # projected_gravity_b[:, 2] is -1 when fully upright, +1 when upside down.
+    return (asset.data.projected_gravity_b[:, 2] < -threshold).float()
+
+
+def host_low_base_lin_vel_xy_exp(
+    env: ManagerBasedRLEnv,
+    sigma: float = 0.25,
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+    orientation_gate_threshold: float | None = None,
+) -> torch.Tensor:
+    """HoST-style target reward that settles xy base linear velocity after standing."""
+    asset: RigidObject = env.scene[asset_cfg.name]
+    vel_error = torch.sum(torch.square(asset.data.root_link_lin_vel_b[:, :2]), dim=1)
+    return torch.exp(-vel_error / sigma) * _host_upright_gate(env, orientation_gate_threshold)
+
+
+def host_low_base_ang_vel_xy_exp(
+    env: ManagerBasedRLEnv,
+    sigma: float = 0.25,
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+    orientation_gate_threshold: float | None = None,
+) -> torch.Tensor:
+    """HoST-style target reward that settles roll/pitch angular velocity."""
+    asset: RigidObject = env.scene[asset_cfg.name]
+    vel_error = torch.sum(torch.square(asset.data.root_link_ang_vel_b[:, :2]), dim=1)
+    return torch.exp(-vel_error / sigma) * _host_upright_gate(env, orientation_gate_threshold)
+
+
+def host_target_joint_pos_exp(
+    env: ManagerBasedRLEnv,
+    sigma: float = 0.1,
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+    orientation_gate_threshold: float | None = None,
+) -> torch.Tensor:
+    """HoST-style target reward for moving selected joints near their default pose."""
+    asset: Articulation = env.scene[asset_cfg.name]
+    joint_error = torch.sum(torch.square(asset.data.joint_pos[:, asset_cfg.joint_ids]), dim=1)
+    return torch.exp(-joint_error / sigma) * _host_upright_gate(env, orientation_gate_threshold)
+
+
 def feet_air_time(
     env: ManagerBasedRLEnv, command_name: str, sensor_cfg: SceneEntityCfg, threshold: float
 ) -> torch.Tensor:
@@ -958,11 +1035,10 @@ def joint_soft_pos_limits(
 
 def action_smoothness_hard(env: ManagerBasedRLEnv) -> torch.Tensor:
     """Penalize the actions using smoothing term."""
-    sm1 = torch.sum(torch.square(env.action_manager.action - env.action_manager.prev_action), dim=1)
-    sm2 = torch.sum(
-        torch.square(env.action_manager.action + env.action_manager.prev_action - 2 * env.action_manager.prev2_action),
-        dim=1,
-    )
+    prev_action = getattr(env.action_manager, "prev_action", env.action_manager.action)
+    prev2_action = getattr(env.action_manager, "prev2_action", prev_action)
+    sm1 = torch.sum(torch.square(env.action_manager.action - prev_action), dim=1)
+    sm2 = torch.sum(torch.square(env.action_manager.action + prev2_action - 2 * prev_action), dim=1)
     sm3 = 0.05 * torch.sum(torch.abs(env.action_manager.action), dim=1)
 
     return sm1 + sm2 + sm3
