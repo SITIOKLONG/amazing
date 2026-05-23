@@ -1,4 +1,5 @@
 from .track_jump import flat_env_track_jump_cfg
+from .track_jump import flat_env_track_jump_env  # noqa: F401
 
 from .track_yk import flat_env_track_yk_cfg
 

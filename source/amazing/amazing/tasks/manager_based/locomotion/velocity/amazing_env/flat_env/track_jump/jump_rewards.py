@@ -112,6 +112,143 @@ def reward_push_ground_event(
 
     return reward * event_command[:, 0] * torch.logical_and(event_time >= event_time_range[0], event_time <= event_time_range[1])
 
+def base_height_clearance_event(
+    env: ManagerBasedRLEnv,
+    event_command_name: str = "event",
+    active_time_range: tuple = (0.35, 1.0),
+    stand_height: float = 0.6129,
+    target_height: float = 0.72,
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot", body_names="base_link"),
+) -> torch.Tensor:
+    event_command = env.command_manager.get_command(event_command_name)
+    event_time = event_command[:, 1]
+    asset: RigidObject = env.scene[asset_cfg.name]
+
+    base_z = asset.data.body_pos_w[:, asset_cfg.body_ids[0], 2]
+    height_progress = torch.clamp((base_z - stand_height) / max(target_height - stand_height, 1e-6), 0.0, 1.0)
+    active = torch.logical_and(event_time >= active_time_range[0], event_time <= active_time_range[1])
+    return height_progress * event_command[:, 0] * active
+
+
+def base_height_target_event(
+    env: ManagerBasedRLEnv,
+    event_command_name: str = "event",
+    active_time_range: tuple = (0.0, 0.3),
+    target_height: float = 0.45,
+    sigma: float = 0.08,
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot", body_names="base_link"),
+) -> torch.Tensor:
+    event_command = env.command_manager.get_command(event_command_name)
+    event_time = event_command[:, 1]
+    asset: RigidObject = env.scene[asset_cfg.name]
+
+    base_z = asset.data.body_pos_w[:, asset_cfg.body_ids[0], 2]
+    active = torch.logical_and(event_time >= active_time_range[0], event_time <= active_time_range[1])
+    return torch.exp(-torch.square(base_z - target_height) / sigma) * event_command[:, 0] * active
+
+
+def leg_crouch_pose(
+    env: ManagerBasedRLEnv,
+    thigh_abs_target: float = 0.45,
+    calf_abs_target: float = 0.65,
+    abd_abs_target: float = 0.0,
+    sigma: float = 0.35,
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+) -> torch.Tensor:
+    asset: Articulation = env.scene[asset_cfg.name]
+    q = asset.data.joint_pos[:, asset_cfg.joint_ids]
+
+    thigh = q[:, 0:2].abs()
+    calf = q[:, 2:4].abs()
+    abd = q[:, 4:6].abs()
+
+    error = torch.sum(torch.square(thigh - thigh_abs_target), dim=1)
+    error += torch.sum(torch.square(calf - calf_abs_target), dim=1)
+    error += torch.sum(torch.square(abd - abd_abs_target), dim=1)
+    return torch.exp(-error / sigma)
+
+
+def leg_bend_progress(
+    env: ManagerBasedRLEnv,
+    thigh_target: float = 0.55,
+    calf_target: float = 0.85,
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+) -> torch.Tensor:
+    asset: Articulation = env.scene[asset_cfg.name]
+    q = asset.data.joint_pos[:, asset_cfg.joint_ids].abs()
+
+    thigh_progress = torch.clamp(q[:, 0:2] / max(thigh_target, 1e-6), 0.0, 1.0).mean(dim=1)
+    calf_progress = torch.clamp(q[:, 2:4] / max(calf_target, 1e-6), 0.0, 1.0).mean(dim=1)
+    return 0.5 * (thigh_progress + calf_progress)
+
+
+def leg_bend_progress_event(
+    env: ManagerBasedRLEnv,
+    event_command_name: str = "event",
+    active_time_range: tuple = (0.0, 0.25),
+    thigh_target: float = 0.55,
+    calf_target: float = 0.85,
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+) -> torch.Tensor:
+    event_command = env.command_manager.get_command(event_command_name)
+    event_time = event_command[:, 1]
+    reward = leg_bend_progress(env, thigh_target=thigh_target, calf_target=calf_target, asset_cfg=asset_cfg)
+    active = torch.logical_and(event_time >= active_time_range[0], event_time <= active_time_range[1])
+    return reward * event_command[:, 0] * active
+
+
+def leg_extension_event(
+    env: ManagerBasedRLEnv,
+    event_command_name: str = "event",
+    active_time_range: tuple = (0.25, 0.55),
+    thigh_abs_target: float = 0.08,
+    calf_abs_target: float = 0.08,
+    abd_abs_target: float = 0.0,
+    sigma: float = 0.25,
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+) -> torch.Tensor:
+    event_command = env.command_manager.get_command(event_command_name)
+    event_time = event_command[:, 1]
+    asset: Articulation = env.scene[asset_cfg.name]
+    q = asset.data.joint_pos[:, asset_cfg.joint_ids].abs()
+
+    error = torch.sum(torch.square(q[:, 0:2] - thigh_abs_target), dim=1)
+    error += torch.sum(torch.square(q[:, 2:4] - calf_abs_target), dim=1)
+    error += torch.sum(torch.square(q[:, 4:6] - abd_abs_target), dim=1)
+    active = torch.logical_and(event_time >= active_time_range[0], event_time <= active_time_range[1])
+    return torch.exp(-error / sigma) * event_command[:, 0] * active
+
+
+def abd_spread_l1(
+    env: ManagerBasedRLEnv,
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+) -> torch.Tensor:
+    asset: Articulation = env.scene[asset_cfg.name]
+    return torch.sum(torch.abs(asset.data.joint_pos[:, asset_cfg.joint_ids]), dim=1)
+
+
+def wheel_air_event(
+    env: ManagerBasedRLEnv,
+    event_command_name: str = "event",
+    active_time_range: tuple = (0.4, 1.0),
+    min_air_height: float = 0.08,
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+    sensor_cfg: SceneEntityCfg = SceneEntityCfg("contact_forces"),
+) -> torch.Tensor:
+    event_command = env.command_manager.get_command(event_command_name)
+    event_time = event_command[:, 1]
+    asset: RigidObject = env.scene[asset_cfg.name]
+    contact_sensor: ContactSensor = env.scene.sensors[sensor_cfg.name]
+
+    wheel_z = asset.data.body_pos_w[:, asset_cfg.body_ids, 2]
+    wheel_height_progress = torch.clamp(wheel_z / max(min_air_height, 1e-6), 0.0, 1.0).mean(dim=1)
+    in_contact = contact_sensor.data.current_contact_time[:, sensor_cfg.body_ids] > 0.0
+    no_contact = (~in_contact).float().mean(dim=1)
+
+    active = torch.logical_and(event_time >= active_time_range[0], event_time <= active_time_range[1])
+    return (0.5 * wheel_height_progress + 0.5 * no_contact) * event_command[:, 0] * active
+
+
 def feet_air_time_event(
     env: ManagerBasedRLEnv,
     event_command_name: str,
@@ -167,25 +304,29 @@ class RewardCompleteEvent(ManagerTermBase):
                  env: ManagerBasedRLEnv):
         super().__init__(cfg, env)
         self.asset = env.scene[cfg.params["asset_cfg"].name]
-        self.contact_sensor = env.scene.sensors[cfg.params["sensor_cfg"].name]
+        self.contact_sensor = env.scene.sensors[cfg.params["contact_sensor_cfg"].name]
 
-        self.base_id = self.asset.find_bodies("base_link")[0]
-        self.foot_ids = self.asset.find_bodies(".*wheel_static_link")[0]
-        self.contact_foot_ids = self.asset.find_bodies(".*wheel_link")[0]
+        self.base_id = cfg.params["asset_cfg"].body_ids[0]
+        self.foot_ids = cfg.params["foot_asset_cfg"].body_ids
+        self.contact_foot_ids = cfg.params["contact_sensor_cfg"].body_ids
 
         self.jump_flag = torch.zeros(env.num_envs, dtype=torch.bool, device=env.device)
         self.jump_land_flag = torch.zeros(env.num_envs, dtype=torch.bool, device=env.device)
 
-        # Thresholds
-        self.BASE_THRESH = 0.55
-        self.FOOT_THRESH = 0.25
-        self.LANDING_TIME = 0.8
+        self.base_height_threshold = cfg.params["base_height_threshold"]
+        self.foot_height_threshold = cfg.params["foot_height_threshold"]
+        self.landing_time = cfg.params["landing_time"]
 
     def __call__(self,
                  env: ManagerBasedRLEnv,
                  event_command_name: str,
                  asset_cfg: SceneEntityCfg,
-                 sensor_cfg: SceneEntityCfg):
+                 foot_asset_cfg: SceneEntityCfg,
+                 contact_sensor_cfg: SceneEntityCfg,
+                 jump_time_range: tuple,
+                 base_height_threshold: float,
+                 foot_height_threshold: float,
+                 landing_time: float):
 
         # === 1. Command and time ===
         command = env.command_manager.get_command(event_command_name)
@@ -194,7 +335,7 @@ class RewardCompleteEvent(ManagerTermBase):
 
         # === 2. Observation ===
         pos = self.asset.data.body_pos_w
-        base_z = pos[:, self.base_id, 2].squeeze(-1)
+        base_z = pos[:, self.base_id, 2]
         foot_z = pos[:, self.foot_ids, 2]     # shape: (N, 2)
 
         # === 3. Sensor contact ===
@@ -203,13 +344,11 @@ class RewardCompleteEvent(ManagerTermBase):
         wheels_contact = in_contact.all(dim=1)
 
         # === 4. Boolean masks ===
-        jump_window = (event_time > 0.5) & (event_time < 1.0)
-        jumped_high_enough = (base_z > self.BASE_THRESH) & \
-                             (foot_z[:, 0] > self.FOOT_THRESH) & \
-                             (foot_z[:, 1] > self.FOOT_THRESH)
+        jump_window = (event_time > jump_time_range[0]) & (event_time < jump_time_range[1])
+        jumped_high_enough = (base_z > base_height_threshold) & torch.all(foot_z > foot_height_threshold, dim=1)
         jump_success = jump_window & jumped_high_enough
 
-        landing_success = (event_time >= self.LANDING_TIME) & wheels_contact
+        landing_success = (event_time >= landing_time) & wheels_contact
         command_active = command_flag > 0.5
         is_dead = env.reset_buf > 0
 
@@ -225,8 +364,8 @@ class RewardCompleteEvent(ManagerTermBase):
         # death_mask       = self.jump_land_flag &  is_dead & command_active
         # total_fail_mask  = ~self.jump_land_flag & command_active
 
-        reward[jump_success_mask]    =  1.0
-        reward[jump_land_success_mask] = 1.0
+        reward[jump_success_mask] += 1.0
+        reward[jump_land_success_mask] += 1.0
 
         # === 7. Reset ===
         reset_mask = is_dead | (event_time < 0.02)

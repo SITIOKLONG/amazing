@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 import math
 from isaaclab.managers import RewardTermCfg as RewTerm
+from isaaclab.managers import ObservationTermCfg as ObsTerm
 from isaaclab.managers import SceneEntityCfg
 from isaaclab.utils import configclass
 
@@ -14,6 +15,7 @@ from amazing.amazing.tasks.manager_based.locomotion.velocity.amazing_env.velocit
     LocomotionVelocityFlatEnvCfg,
     CurriculumCfg,
     CommandsCfg,
+    ActionsCfg,
 )
 
 from amazing.assets.amazing import AmazingCfg  # isort: skip
@@ -23,10 +25,56 @@ class AmazingCommandsCfg(CommandsCfg):
     event = mdp.EventCommandCfg(
         asset_name="robot",
         resampling_time_range=(3.0, 5.0),
-        rel_standing_envs=0.1,
+        rel_standing_envs=0.9,
         event_during_time=1.2,
         debug_vis=True,
     )
+
+
+@configclass
+class AmazingActionsCfg(ActionsCfg):
+    joint_pos = mdp.JointPositionActionCfg(
+        asset_name="robot",
+        joint_names=[
+            "left_thigh",
+            "right_thigh",
+            "left_calf",
+            "right_calf",
+            "right_abd",
+            "left_abd",
+            "arm_base",
+            "arm_pitch1",
+            "arm_pitch2",
+            "arm_pitch3",
+            "arm_yaw",
+            "arm_claim",
+        ],
+        scale={
+            ".*_thigh": 0.6,
+            ".*_calf": 0.8,
+            ".*_abd": 0.12,
+            "arm_.*": 1.2,
+        },
+        offset={
+            "left_thigh": 0.55,
+            "right_thigh": 0.55,
+            "left_calf": -0.85,
+            "right_calf": -0.85,
+            "left_abd": 0.0,
+            "right_abd": 0.0,
+            "arm_.*": 0.0,
+        },
+        use_default_offset=False,
+        preserve_order=True,
+    )
+    wheel_vel = mdp.JointVelocityActionCfg(
+        asset_name="robot",
+        joint_names=["left_wheel", "right_wheel"],
+        scale=40.0,
+        use_default_offset=False,
+        preserve_order=True,
+    )
+
 
 @configclass
 class AmazingCurriculumCfg(CurriculumCfg):
@@ -51,39 +99,169 @@ class AmazingRewardsCfg():
         func=mdp.track_ang_vel_z_link_exp, weight=1.0, params={"command_name": "base_velocity", "std": math.sqrt(0.25)}
     )
 
+    stand_upright = RewTerm(
+        func=mdp.host_upright_exp,
+        weight=8.0,
+        params={"sigma": 1.0, "asset_cfg": SceneEntityCfg("robot", body_names="base_link")},
+    )
+    stand_base_height = RewTerm(
+        func=mdp.host_base_height_exp,
+        weight=4.0,
+        params={
+            "target_height": 0.45,
+            "sigma": 0.25,
+            "asset_cfg": SceneEntityCfg("robot", body_names="base_link"),
+        },
+    )
+
+    crouch_pose = RewTerm(
+        func=mdp_jump.leg_crouch_pose,
+        weight=1.0,
+        params={
+            "thigh_abs_target": 0.55,
+            "calf_abs_target": 0.85,
+            "abd_abs_target": 0.0,
+            "sigma": 0.35,
+            "asset_cfg": SceneEntityCfg(
+                "robot",
+                joint_names=["left_thigh", "right_thigh", "left_calf", "right_calf", "left_abd", "right_abd"],
+            ),
+        },
+    )
+
+    leg_bend_progress = RewTerm(
+        func=mdp_jump.leg_bend_progress,
+        weight=2.0,
+        params={
+            "thigh_target": 0.55,
+            "calf_target": 0.85,
+            "asset_cfg": SceneEntityCfg(
+                "robot", joint_names=["left_thigh", "right_thigh", "left_calf", "right_calf"]
+            ),
+        },
+    )
+
+    crouch_bend_event = RewTerm(
+        func=mdp_jump.leg_bend_progress_event,
+        weight=8.0,
+        params={
+            "event_command_name": "event",
+            "active_time_range": (0.0, 0.25),
+            "thigh_target": 0.55,
+            "calf_target": 0.85,
+            "asset_cfg": SceneEntityCfg(
+                "robot", joint_names=["left_thigh", "right_thigh", "left_calf", "right_calf"]
+            ),
+        },
+    )
+
+    leg_extension_event = RewTerm(
+        func=mdp_jump.leg_extension_event,
+        weight=12.0,
+        params={
+            "event_command_name": "event",
+            "active_time_range": (0.25, 0.55),
+            "thigh_abs_target": 0.08,
+            "calf_abs_target": 0.08,
+            "abd_abs_target": 0.0,
+            "sigma": 0.25,
+            "asset_cfg": SceneEntityCfg(
+                "robot",
+                joint_names=["left_thigh", "right_thigh", "left_calf", "right_calf", "left_abd", "right_abd"],
+            ),
+        },
+    )
+
+    abd_spread_l1 = RewTerm(
+        func=mdp_jump.abd_spread_l1,
+        weight=-12.0,
+        params={"asset_cfg": SceneEntityCfg("robot", joint_names=["left_abd", "right_abd"])},
+    )
+
     lin_vel_z_event = RewTerm(
         func=mdp_jump.lin_vel_z_event,
-        weight=2.5,
+        weight=4.0,
         params={"event_command_name": "event",
-                "event_time_range": (0.3, 0.8),
-                "max_up_vel": 4.0,
-                "up_vel_coef": 20.0,
+                "event_time_range": (0.35, 0.8),
+                "max_up_vel": 1.5,
+                "up_vel_coef": 8.0,
                 "down_vel_coef": 0.0,
-                "temperature": 2.0,
+                "temperature": 1.0,
         }
     )
 
     push_ground_event = RewTerm(
         func = mdp_jump.reward_push_ground_event,
-        weight=0.05,
+        weight=3.0,
         params= {
             "event_command_name": "event",
-            "event_time_range": (0.3, 0.8),
-            "asset_cfg": SceneEntityCfg("robot", body_names=".*_wheel_link"),
-            "sensor_cfg": SceneEntityCfg("contact_forces", body_names=".*_wheel_link"),
+            "event_time_range": (0.25, 0.45),
+            "asset_cfg": SceneEntityCfg("robot", body_names="W.*_1"),
+            "sensor_cfg": SceneEntityCfg("contact_forces", body_names="W.*_1"),
         }
     )
 
-    wheel_action_zero_event = RewTerm(func=mdp_jump.wheel_action_zero_event, weight=-0.01)
+    crouch_before_jump_event = RewTerm(
+        func=mdp_jump.base_height_target_event,
+        weight=4.0,
+        params={
+            "event_command_name": "event",
+            "active_time_range": (0.0, 0.25),
+            "target_height": 0.42,
+            "sigma": 0.04,
+            "asset_cfg": SceneEntityCfg("robot", body_names="base_link"),
+        },
+    )
+
+    base_height_clearance_event = RewTerm(
+        func=mdp_jump.base_height_clearance_event,
+        weight=6.0,
+        params={
+            "event_command_name": "event",
+            "active_time_range": (0.45, 1.0),
+            "stand_height": 0.42,
+            "target_height": 0.72,
+            "asset_cfg": SceneEntityCfg("robot", body_names="base_link"),
+        },
+    )
+
+    wheel_air_event = RewTerm(
+        func=mdp_jump.wheel_air_event,
+        weight=8.0,
+        params={
+            "event_command_name": "event",
+            "active_time_range": (0.4, 1.0),
+            "min_air_height": 0.08,
+            "asset_cfg": SceneEntityCfg("robot", body_names="W.*_1"),
+            "sensor_cfg": SceneEntityCfg("contact_forces", body_names="W.*_1"),
+        },
+    )
+
+    jump_complete_event = RewTerm(
+        func=mdp_jump.RewardCompleteEvent,
+        weight=5.0,
+        params={
+            "event_command_name": "event",
+            "asset_cfg": SceneEntityCfg("robot", body_names="base_link"),
+            "foot_asset_cfg": SceneEntityCfg("robot", body_names="W.*_1"),
+            "contact_sensor_cfg": SceneEntityCfg("contact_forces", body_names="W.*_1"),
+            "jump_time_range": (0.45, 1.0),
+            "base_height_threshold": 0.68,
+            "foot_height_threshold": 0.08,
+            "landing_time": 0.8,
+        },
+    )
+
+    wheel_action_zero_event = RewTerm(func=mdp_jump.wheel_action_zero_event, weight=0.0)
 
     # -- Penalites
-    termination_penalty = RewTerm(func=mdp.is_terminated, weight=-500.0)
+    termination_penalty = RewTerm(func=mdp.is_terminated, weight=-50.0)
 
     ang_vel_xy_l2 = RewTerm(func=mdp.ang_vel_xy_link_l2, weight=-0.05)
 
     joint_deviation_hip = RewTerm(
         func=mdp.joint_deviation_zero_l1,
-        weight=-10.0,
+        weight=0.0,
         params={"asset_cfg": SceneEntityCfg("robot", joint_names=[".*_calf"])},
     )
 
@@ -106,32 +284,42 @@ class AmazingRewardsCfg():
         func=mdp.undesired_contacts,
         weight=-1.0,
         params={
-            "sensor_cfg": SceneEntityCfg("contact_forces", body_names=[".*_shoulder_link", ".*_leg_link"]),
+            "sensor_cfg": SceneEntityCfg("contact_forces", body_names=["F.*1_1", "F.*2_1"]),
+            "threshold": 1.0,
+        },
+    )
+    torso_contacts = RewTerm(
+        func=mdp.undesired_contacts,
+        weight=-5.0,
+        params={
+            "sensor_cfg": SceneEntityCfg(
+                "contact_forces", body_names=["base_link", "SR_1", "SL_1"]
+            ),
             "threshold": 1.0,
         },
     )
     joint_applied_torque_limits = RewTerm(
         func=mdp.applied_torque_limits,
-        weight=-0.1,  # default: -0.1
+        weight=-0.005,
         params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*")},
     )
     shoulder_align_l1 = RewTerm(
         func=mdp.joint_align_l1,
-        weight=-1.0,  # default: -0.5
+        weight=-0.2,
         params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*thigh")},
     )
     leg_align_l1 = RewTerm(
         func=mdp.joint_align_l1,
-        weight=-1.0,  # default: -0.5
+        weight=-0.2,
         params={"asset_cfg": SceneEntityCfg("robot", joint_names=".*_wheel")},
     )
-    flat_orientation_l2 = RewTerm(func=mdp.flat_euler_angle_l2, weight=-30.0)
+    flat_orientation_l2 = RewTerm(func=mdp.flat_euler_angle_l2, weight=-10.0)
 
     base_height = RewTerm(
         func=mdp_jump.base_height_adaptive_l2_event,
         weight=-40.0,
         params={
-            "target_height": 0.36288,
+        "target_height": 0.45,
             "event_command_name": "event",
             "asset_cfg": SceneEntityCfg("robot", body_names="base_link"),
         },
@@ -147,41 +335,69 @@ class AmazingFlatEnvCfg(LocomotionVelocityFlatEnvCfg):
 
     rewards: AmazingRewardsCfg = AmazingRewardsCfg()
     commands: AmazingCommandsCfg = AmazingCommandsCfg()
-    # curriculum: AmazingCurriculumCfg = AmazingCurriculumCfg()
+    actions: AmazingActionsCfg = AmazingActionsCfg()
+    curriculum: AmazingCurriculumCfg = AmazingCurriculumCfg()
 
     def __post_init__(self):
         # post init of parent
         super().__post_init__()
         # scene
         self.scene.robot = AmazingCfg.replace(prim_path="{ENV_REGEX_NS}/Robot")
+        self.scene.robot.actuators["thigh"].stiffness = {".*": 300.0}
+        self.scene.robot.actuators["thigh"].damping = {".*": 4.0}
+        self.scene.robot.actuators["thigh"].velocity_limit = 300.0
+        self.scene.robot.init_state.joint_pos = {
+            "left_thigh": 0.55,
+            "right_thigh": 0.55,
+            "left_calf": -0.85,
+            "right_calf": -0.85,
+            "left_abd": 0.0,
+            "right_abd": 0.0,
+            "left_wheel": 0.0,
+            "right_wheel": 0.0,
+            "arm_base": 0.0,
+            "arm_pitch1": 0.0,
+            "arm_pitch2": 0.0,
+            "arm_pitch3": 0.0,
+            "arm_yaw": 0.0,
+            "arm_claim": 0.0,
+        }
 
         #! ************** scene & observations setup - 0 *********** !#
-        self.scene.height_scanner = None
-        self.scene.base_height_scanner = None
-        self.scene.left_wheel_height_scanner = None
-        self.scene.right_wheel_height_scanner = None
-        self.scene.left_mask_sensor = None
-        self.scene.right_mask_sensor = None
+        # self.scene.height_scanner = None
+        # self.scene.base_height_scanner = None
+        # self.scene.left_wheel_height_scanner = None
+        # self.scene.right_wheel_height_scanner = None
+        # self.scene.left_mask_sensor = None
+        # self.scene.right_mask_sensor = None
 
-        self.observations.none_stack_critic.base_height_scan = None
-        self.observations.none_stack_critic.left_wheel_height_scan = None
-        self.observations.none_stack_critic.right_wheel_height_scan = None
+        # self.observations.none_stack_critic.base_height_scan = None
+        # self.observations.none_stack_critic.left_wheel_height_scan = None
+        # self.observations.none_stack_critic.right_wheel_height_scan = None
         #! ********************************************************* !#
 
         # observations
         #! ****************** Observations setup - 0 *************** !#
-        self.observations.none_stack_policy.base_pos_z.params["sensor_cfg"] = None
-        self.observations.none_stack_critic.base_pos_z.params["sensor_cfg"] = None
+        # self.observations.none_stack_policy.base_pos_z.params["sensor_cfg"] = None
+        # self.observations.none_stack_critic.base_pos_z.params["sensor_cfg"] = None
 
-        self.observations.none_stack_policy.height_scan = None
-        self.observations.none_stack_policy.base_lin_vel = None
-        self.observations.none_stack_policy.base_pos_z = None
-        self.observations.none_stack_policy.current_reward = None
-        self.observations.none_stack_policy.is_contact = None
-        self.observations.none_stack_policy.lift_mask = None
+        # self.observations.none_stack_policy.height_scan = None
+        # self.observations.none_stack_policy.base_lin_vel = None
+        # self.observations.none_stack_policy.base_pos_z = None
+        # self.observations.none_stack_policy.current_reward = None
+        # self.observations.none_stack_policy.is_contact = None
+        # self.observations.none_stack_policy.lift_mask = None
 
-        self.observations.none_stack_policy.roll_pitch_commands = None
-        self.observations.none_stack_critic.roll_pitch_commands = None
+        # self.observations.none_stack_policy.roll_pitch_commands = None
+        # self.observations.none_stack_critic.roll_pitch_commands = None
+        self.observations.none_stack_policy.event_commands = ObsTerm(
+            func=mdp.generated_scaled_event_commands,
+            params={"command_name": "event", "scale": (1.0, 1.0)},
+        )
+        self.observations.none_stack_critic.event_commands = ObsTerm(
+            func=mdp.generated_scaled_event_commands,
+            params={"command_name": "event", "scale": (1.0, 1.0)},
+        )
         #! ********************************************************* !#
 
         # reset_robot_joint_zero should be called here
@@ -189,46 +405,39 @@ class AmazingFlatEnvCfg(LocomotionVelocityFlatEnvCfg):
         # self.events.push_robot = True
         self.events.push_robot.interval_range_s = (13.0, 15.0)
         self.events.push_robot.params = {
-            "velocity_range": {"x": (-1.5, 1.5), "y": (-1.0, 1.0), "z": (-1.0, 0.5)},
+            "velocity_range": {"x": (-0.0, 0.0), "y": (-0.0, 0.0), "z": (-0.0, 0.0)},
         }
         # add base mass should be called here
-        self.events.add_base_mass.params["asset_cfg"].body_names = ["base_link"]
-        self.events.add_base_mass.params["mass_distribution_params"] = (-0.75, 1.5)
+        # self.events.add_base_mass.params["asset_cfg"].body_names = ["base_link"]
+        # self.events.add_base_mass.params["mass_distribution_params"] = (-0.75, 1.5)
 
         # physics material should be called here
-        self.events.physics_material.params["asset_cfg"].body_names = [".*_link"]
-        self.events.physics_material.params["static_friction_range"] = (0.3, 1.2)
-        self.events.physics_material.params["dynamic_friction_range"] = (0.3, 0.8)
+        # self.events.physics_material.params["asset_cfg"].body_names = [".*_link"]
+        # self.events.physics_material.params["static_friction_range"] = (0.3, 1.2)
+        # self.events.physics_material.params["dynamic_friction_range"] = (0.3, 0.8)
         self.events.reset_base.params = {
             "pose_range": {"x": (-0.5, 0.5), "y": (-0.5, 0.5), "yaw": (-3.14, 3.14)},
             "velocity_range": {
                 "x": (0.0, 0.0),
                 "y": (0.0, 0.0),
                 "z": (0.0, 0.0),
-                "roll": (-0.25, 0.25),
-                "pitch": (-0.25, 0.25),
+                "roll": (0.0, 0.0),
+                "pitch": (0.0, 0.0),
                 "yaw": (-0.0, 0.0),
             },
         }
 
         # commands
         self.commands.base_velocity.resampling_time_range = (9.0, 13.0)
-        self.commands.base_velocity.rel_standing_envs = 0.2
-        self.commands.base_velocity.ranges.lin_vel_x = (-1.5, 1.5)
+        self.commands.base_velocity.rel_standing_envs = 0.5
+        self.commands.base_velocity.ranges.lin_vel_x = (-0.5, 0.5)
         self.commands.base_velocity.ranges.lin_vel_y = (0.0, 0.0)
-        self.commands.base_velocity.ranges.ang_vel_z = (-2.5, 2.5)
+        self.commands.base_velocity.ranges.ang_vel_z = (-1.0, 1.0)
         # self.commands.base_velocity.ranges.heading = (-math.pi, math.pi)
         self.commands.base_velocity.ranges.pos_z = (0.0, 0.0)
 
-        # terminations
-        self.terminations.base_contact.params["sensor_cfg"].body_names = [
-            "base_link",
-            "T1_1",
-            "T2_1",
-            "T3_1",
-            "SR_1",
-            "SL_1",
-        ]
+        # Keep early jump training alive long enough to reach the event window.
+        self.terminations.base_contact.params["sensor_cfg"].body_names = []
 
 
 @configclass
@@ -258,13 +467,13 @@ class AmazingFlatEnvCfg_PLAY(AmazingFlatEnvCfg):
         }
 
         # add base mass should be called here
-        self.events.add_base_mass.params["asset_cfg"].body_names = ["base_link"]
-        self.events.add_base_mass.params["mass_distribution_params"] = (-0.75, 1.0)
+        # self.events.add_base_mass.params["asset_cfg"].body_names = ["base_link"]
+        # self.events.add_base_mass.params["mass_distribution_params"] = (-0.75, 1.0)
 
         # physics material should be called here
-        self.events.physics_material.params["asset_cfg"].body_names = [".*_link"]
-        self.events.physics_material.params["static_friction_range"] = (0.3, 1.0)
-        self.events.physics_material.params["dynamic_friction_range"] = (0.3, 0.8)
+        # self.events.physics_material.params["asset_cfg"].body_names = [".*_link"]
+        # self.events.physics_material.params["static_friction_range"] = (0.3, 1.0)
+        # self.events.physics_material.params["dynamic_friction_range"] = (0.3, 0.8)
         self.events.reset_base.params = {
             "pose_range": {"x": (-0.0, 0.0), "y": (-0.0, 0.0), "yaw": (0.0, 0.0)},
             "velocity_range": {
@@ -278,6 +487,8 @@ class AmazingFlatEnvCfg_PLAY(AmazingFlatEnvCfg):
         }
 
         # commands
+        self.commands.event.resampling_time_range = (2.0, 2.0)
+        self.commands.event.rel_standing_envs = 0.0
         self.commands.base_velocity.resampling_time_range = (3.0, 8.0)
         self.commands.base_velocity.rel_standing_envs = 0.5
         self.commands.base_velocity.ranges.lin_vel_x = (-1.0, 1.0)
@@ -289,9 +500,6 @@ class AmazingFlatEnvCfg_PLAY(AmazingFlatEnvCfg):
         # terminations
         self.terminations.base_contact.params["sensor_cfg"].body_names = [
             "base_link",
-            "T1_1",
-            "T2_1",
-            "T3_1",
             "SR_1",
             "SL_1",
         ]

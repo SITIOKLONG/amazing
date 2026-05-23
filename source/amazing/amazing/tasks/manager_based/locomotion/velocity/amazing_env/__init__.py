@@ -100,7 +100,7 @@ gym.register(
 
 gym.register(
     id="Isaac-TrackJUMP-Flat-Amazing-v0-ppo",
-    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    entry_point="amazing.amazing.tasks.manager_based.locomotion.velocity.amazing_env.flat_env.track_jump.flat_env_track_jump_env:AmazingFlatTrackJumpEnv",
     disable_env_checker=True,
     kwargs={
         "env_cfg_entry_point": flat_env.flat_env_track_jump_cfg.AmazingFlatEnvCfg,
@@ -110,7 +110,7 @@ gym.register(
 
 gym.register(
     id="Isaac-TrackJUMP-Flat-Amazing-Play-v0-ppo",
-    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    entry_point="amazing.amazing.tasks.manager_based.locomotion.velocity.amazing_env.flat_env.track_jump.flat_env_track_jump_env:AmazingFlatTrackJumpEnv",
     disable_env_checker=True,
     kwargs={
         "env_cfg_entry_point": flat_env.flat_env_track_jump_cfg.AmazingFlatEnvCfg_PLAY,

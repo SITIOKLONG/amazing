@@ -101,6 +101,8 @@ class AmazingFlatPPORunnerCfg_Track_JUMP(AmazingPPORunnerCfg):
 
         self.max_iterations = 5000
         self.experiment_name = "Amazing_Flat_Jump"
+        self.policy.init_noise_std = 0.3
+        self.algorithm.learning_rate = 3.0e-4
         self.policy.actor_hidden_dims = [512, 256, 128]
         self.policy.critic_hidden_dims = [512, 256, 128]
 
